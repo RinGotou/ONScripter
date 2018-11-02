@@ -75,6 +75,7 @@ static int osprintf(char *str, const char *format, ...)
         }
     }
     va_end( list );
+    return strlen(str);
 }
 #define sprintf osprintf
 #endif

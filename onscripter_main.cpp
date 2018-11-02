@@ -143,6 +143,7 @@ JNIEXPORT jint JNICALL JAVA_EXPORT_NAME(ONScripter_nativeInitJavaCallbacks) (JNI
     JavaPlayVideo = jniEnv->GetMethodID(JavaONScripterClass, "playVideo", "([C)V");
     JavaGetFD = jniEnv->GetMethodID(JavaONScripterClass, "getFD", "([CI)I");
     JavaMkdir = jniEnv->GetMethodID(JavaONScripterClass, "mkdir", "([C)I");
+    return 0;
 }
 
 JNIEXPORT jint JNICALL 
