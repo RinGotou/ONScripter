@@ -305,6 +305,7 @@ public:
     void NSDSetSpriteCommand(int spnum, int texnum, const char *tag);
 
     void stopSMPEG();
+    void updateEffectDst();
     
 private:
     // ----------------------------------------
@@ -461,9 +462,11 @@ private:
     int  effect_timer_resolution;
     int  effect_start_time;
     int  effect_start_time_old;
+    bool update_effect_dst;
     
+    void generateEffectDst(int effect_no, bool generate_effect_dst, bool update_backup_surface);
     bool setEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface );
-    bool doEffect( EffectLink *effect, bool clear_dirty_region=true );
+    bool doEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface, bool clear_dirty_region=true );
     void drawEffect( SDL_Rect *dst_rect, SDL_Rect *src_rect, SDL_Surface *surface );
     void generateMosaic( SDL_Surface *src_surface, int level );
     

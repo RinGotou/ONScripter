@@ -27,19 +27,17 @@
 #define EFFECT_STRIPE_CURTAIN_WIDTH (24 * screen_ratio1 / screen_ratio2)
 #define EFFECT_QUAKE_AMP (12 * screen_ratio1 / screen_ratio2)
 
-bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface )
+void ONScripter::updateEffectDst()
 {
-    if ( effect->effect == 0 ) return true;
+    update_effect_dst = true;
+    dirty_rect.fill( screen_width, screen_height );
+};
 
+void ONScripter::generateEffectDst(int effect_no, bool generate_effect_dst, bool update_backup_surface)
+{
     if (update_backup_surface)
         refreshSurface(backup_surface, &dirty_rect.bounding_box, REFRESH_NORMAL_MODE);
     
-    int effect_no = effect->effect;
-    if (effect_cut_flag && (skip_mode & SKIP_NORMAL || ctrl_pressed_status)) 
-        effect_no = 1;
-
-    SDL_BlitSurface( accumulation_surface, NULL, effect_src_surface, NULL );
-        
     if (generate_effect_dst){
         int refresh_mode = refreshMode();
         if (update_backup_surface && refresh_mode == REFRESH_NORMAL_MODE){
@@ -52,6 +50,20 @@ bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool u
                 refreshSurface( effect_dst_surface, NULL, refresh_mode );
         }
     }
+}
+
+bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface )
+{
+    if ( effect->effect == 0 ) return true;
+
+    int effect_no = effect->effect;
+    if (effect_cut_flag && (skip_mode & SKIP_NORMAL || ctrl_pressed_status)) 
+        effect_no = 1;
+
+    SDL_BlitSurface( accumulation_surface, NULL, effect_src_surface, NULL );
+
+    generateEffectDst(effect_no, generate_effect_dst, update_backup_surface);
+    update_effect_dst = false;
     
     /* Load mask image */
     if ( effect_no == 15 || effect_no == 18 ){
@@ -91,7 +103,7 @@ bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool u
     return false;
 }
 
-bool ONScripter::doEffect( EffectLink *effect, bool clear_dirty_region )
+bool ONScripter::doEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface, bool clear_dirty_region )
 {
     effect_start_time = SDL_GetTicks();
     if ( effect_counter == 0 ) effect_start_time_old = effect_start_time - 1;
@@ -103,6 +115,11 @@ bool ONScripter::doEffect( EffectLink *effect, bool clear_dirty_region )
     if (effect_cut_flag && (skip_mode & SKIP_NORMAL || ctrl_pressed_status)) 
         effect_no = 1;
 
+    if (update_effect_dst){
+        generateEffectDst(effect_no, generate_effect_dst, update_backup_surface);
+        update_effect_dst = false;
+    }
+    
     int i, amp;
     int width, width2;
     int height, height2;

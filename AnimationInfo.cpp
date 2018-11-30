@@ -423,6 +423,7 @@ void AnimationInfo::blendOnSurface( SDL_Surface *dst_surface, int dst_x, int dst
 
     /* ---------------------------------------- */
     
+    SDL_mutexP(mutex);
     SDL_LockSurface( dst_surface );
     SDL_LockSurface( image_surface );
     
@@ -457,6 +458,7 @@ void AnimationInfo::blendOnSurface( SDL_Surface *dst_surface, int dst_x, int dst
 
     SDL_UnlockSurface( image_surface );
     SDL_UnlockSurface( dst_surface );
+    SDL_mutexV(mutex);
 }
 
 void AnimationInfo::blendOnSurface2( SDL_Surface *dst_surface, int dst_x, int dst_y,
@@ -485,6 +487,7 @@ void AnimationInfo::blendOnSurface2( SDL_Surface *dst_surface, int dst_x, int ds
     if (min_xy[1] <  0)               min_xy[1] = 0;
     if (max_xy[1] >= dst_surface->h)  max_xy[1] = dst_surface->h - 1;
 
+    SDL_mutexP(mutex);
     SDL_LockSurface( dst_surface );
     SDL_LockSurface( image_surface );
     
@@ -558,6 +561,7 @@ void AnimationInfo::blendOnSurface2( SDL_Surface *dst_surface, int dst_x, int ds
     // unlock surface
     SDL_UnlockSurface( image_surface );
     SDL_UnlockSurface( dst_surface );
+    SDL_mutexV(mutex);
 }
 
 #if defined(BPP16)

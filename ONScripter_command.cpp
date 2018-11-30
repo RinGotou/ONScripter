@@ -328,7 +328,7 @@ int ONScripter::talCommand()
 
     EffectLink *el = parseEffect(true);
     if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el));
+    while (doEffect(el, true, true));
 
     return RET_CONTINUE;
 }
@@ -1127,7 +1127,7 @@ int ONScripter::quakeCommand()
     SDL_BlitSurface( accumulation_surface, NULL, effect_dst_surface, NULL );
 
     if (setEffect(&tmp_effect, true, true)) return RET_CONTINUE;
-    while (doEffect(&tmp_effect));
+    while (doEffect(&tmp_effect, true, true));
 
     return RET_CONTINUE;
 }
@@ -1214,7 +1214,7 @@ int ONScripter::printCommand()
 
     EffectLink *el = parseEffect(true);
     if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el));
+    while (doEffect(el, true, true));
 
     return RET_CONTINUE;
 }
@@ -1965,7 +1965,7 @@ int ONScripter::ldCommand()
 
     EffectLink *el = parseEffect(true);
     if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el));
+    while (doEffect(el, true, true));
 
     return RET_CONTINUE;
 }
@@ -1982,6 +1982,7 @@ static void smpeg_filter_callback( SDL_Overlay * dst, SDL_Overlay * src, SDL_Rec
     if (!ai) return;
 
     ai->convertFromYUV(src);
+    ons->updateEffectDst();
 }
 
 static void smpeg_filter_destroy( struct SMPEG_Filter * filter )
@@ -2187,7 +2188,7 @@ int ONScripter::humanorderCommand()
 
     EffectLink *el = parseEffect(true);
     if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el));
+    while (doEffect(el, true, true));
 
     return RET_CONTINUE;
 }
@@ -3295,7 +3296,7 @@ int ONScripter::clCommand()
 
     EffectLink *el = parseEffect(true);
     if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el));
+    while (doEffect(el, true, true));
 
     return RET_CONTINUE;
 }
@@ -3825,7 +3826,7 @@ int ONScripter::bgCommand()
 
     EffectLink *el = parseEffect(true);
     if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el));
+    while (doEffect(el, true, true));
 
     return RET_CONTINUE;
 }
