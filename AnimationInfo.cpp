@@ -2,7 +2,7 @@
  * 
  *  AnimationInfo.cpp - General image storage class of ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -652,6 +652,7 @@ void AnimationInfo::blendText( SDL_Surface *surface, int dst_x, int dst_y, SDL_C
 
     /* ---------------------------------------- */
     
+    SDL_mutexP(mutex);
     SDL_LockSurface( surface );
     SDL_LockSurface( image_surface );
     
@@ -705,6 +706,7 @@ void AnimationInfo::blendText( SDL_Surface *surface, int dst_x, int dst_y, SDL_C
 
     SDL_UnlockSurface( image_surface );
     SDL_UnlockSurface( surface );
+    SDL_mutexV(mutex);
 }
 
 void AnimationInfo::calcAffineMatrix()
@@ -831,6 +833,7 @@ void AnimationInfo::copySurface( SDL_Surface *surface, SDL_Rect *src_rect, SDL_R
     if (_dst_rect.y+_src_rect.h > image_surface->h)
         _src_rect.h = image_surface->h - _dst_rect.y;
         
+    SDL_mutexP(mutex);
     SDL_LockSurface( surface );
     SDL_LockSurface( image_surface );
 
@@ -846,12 +849,14 @@ void AnimationInfo::copySurface( SDL_Surface *surface, SDL_Rect *src_rect, SDL_R
 
     SDL_UnlockSurface( image_surface );
     SDL_UnlockSurface( surface );
+    SDL_mutexV(mutex);
 }
 
 void AnimationInfo::fill( Uint8 r, Uint8 g, Uint8 b, Uint8 a )
 {
     if (!image_surface) return;
     
+    SDL_mutexP(mutex);
     SDL_LockSurface( image_surface );
 
     SDL_PixelFormat *fmt = image_surface->format;
@@ -874,6 +879,7 @@ void AnimationInfo::fill( Uint8 r, Uint8 g, Uint8 b, Uint8 a )
         }
     }
     SDL_UnlockSurface( image_surface );
+    SDL_mutexV(mutex);
 }
 
 SDL_Surface *AnimationInfo::setupImageAlpha( SDL_Surface *surface, SDL_Surface *surface_m, bool has_alpha )
@@ -1043,6 +1049,7 @@ unsigned char AnimationInfo::getAlpha(int x, int y)
     alpha = alpha_buf[image_surface->w*y+offset_x+x];
 #else
     int pitch = image_surface->pitch / 4;
+    SDL_mutexP(mutex);
     SDL_LockSurface( image_surface );
     ONSBuf *buf = (ONSBuf *)image_surface->pixels + pitch*y + offset_x + x;
 
@@ -1052,6 +1059,7 @@ unsigned char AnimationInfo::getAlpha(int x, int y)
     alpha = *((unsigned char *)buf);
 #endif
     SDL_UnlockSurface( image_surface );
+    SDL_mutexV(mutex);
 #endif
 
     return alpha;

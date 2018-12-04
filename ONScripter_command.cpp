@@ -256,7 +256,6 @@ int ONScripter::textoffCommand()
 {
     if (windowchip_sprite_no >= 0)
         sprite_info[windowchip_sprite_no].visible = false;
-    refreshSurface(backup_surface, NULL, REFRESH_NORMAL_MODE);
 
     leaveTextDisplayMode(true);
 
@@ -327,8 +326,8 @@ int ONScripter::talCommand()
     }
 
     EffectLink *el = parseEffect(true);
-    if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el, true, true));
+    if (setEffect(el)) return RET_CONTINUE;
+    while (doEffect(el));
 
     return RET_CONTINUE;
 }
@@ -1126,8 +1125,8 @@ int ONScripter::quakeCommand()
     dirty_rect.fill( screen_width, screen_height );
     SDL_BlitSurface( accumulation_surface, NULL, effect_dst_surface, NULL );
 
-    if (setEffect(&tmp_effect, true, true)) return RET_CONTINUE;
-    while (doEffect(&tmp_effect, true, true));
+    if (setEffect(&tmp_effect)) return RET_CONTINUE;
+    while (doEffect(&tmp_effect));
 
     return RET_CONTINUE;
 }
@@ -1213,8 +1212,8 @@ int ONScripter::printCommand()
     leaveTextDisplayMode();
 
     EffectLink *el = parseEffect(true);
-    if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el, true, true));
+    if (setEffect(el)) return RET_CONTINUE;
+    while (doEffect(el));
 
     return RET_CONTINUE;
 }
@@ -1899,7 +1898,6 @@ int ONScripter::loadgameCommand()
     mp3fadeout_duration = 0; //don't use fadeout during a load
     if ( !loadSaveFile( no ) ){
         dirty_rect.fill( screen_width, screen_height );
-        refreshSurface(backup_surface, &dirty_rect.bounding_box, REFRESH_NORMAL_MODE);
         flush( refreshMode() );
 
         saveon_flag = true;
@@ -1964,8 +1962,8 @@ int ONScripter::ldCommand()
     }
 
     EffectLink *el = parseEffect(true);
-    if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el, true, true));
+    if (setEffect(el)) return RET_CONTINUE;
+    while (doEffect(el));
 
     return RET_CONTINUE;
 }
@@ -2187,8 +2185,8 @@ int ONScripter::humanorderCommand()
             dirty_rect.add( tachi_info[i].pos );
 
     EffectLink *el = parseEffect(true);
-    if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el, true, true));
+    if (setEffect(el)) return RET_CONTINUE;
+    while (doEffect(el));
 
     return RET_CONTINUE;
 }
@@ -3295,8 +3293,8 @@ int ONScripter::clCommand()
     }
 
     EffectLink *el = parseEffect(true);
-    if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el, true, true));
+    if (setEffect(el)) return RET_CONTINUE;
+    while (doEffect(el));
 
     return RET_CONTINUE;
 }
@@ -3825,8 +3823,8 @@ int ONScripter::bgCommand()
     dirty_rect.fill( screen_width, screen_height );
 
     EffectLink *el = parseEffect(true);
-    if (setEffect(el, true, true)) return RET_CONTINUE;
-    while (doEffect(el, true, true));
+    if (setEffect(el)) return RET_CONTINUE;
+    while (doEffect(el));
 
     return RET_CONTINUE;
 }

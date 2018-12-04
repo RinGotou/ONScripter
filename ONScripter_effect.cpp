@@ -2,7 +2,7 @@
  * 
  *  ONScripter_effect.cpp - Effect executer of ONScripter
  *
- *  Copyright (c) 2001-2014 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -33,26 +33,17 @@ void ONScripter::updateEffectDst()
     dirty_rect.fill( screen_width, screen_height );
 };
 
-void ONScripter::generateEffectDst(int effect_no, bool generate_effect_dst, bool update_backup_surface)
+void ONScripter::generateEffectDst(int effect_no)
 {
-    if (update_backup_surface)
-        refreshSurface(backup_surface, &dirty_rect.bounding_box, REFRESH_NORMAL_MODE);
-    
-    if (generate_effect_dst){
-        int refresh_mode = refreshMode();
-        if (update_backup_surface && refresh_mode == REFRESH_NORMAL_MODE){
-            SDL_BlitSurface( backup_surface, &dirty_rect.bounding_box, effect_dst_surface, &dirty_rect.bounding_box );
-        }
-        else{
-            if (effect_no == 1)
-                refreshSurface( effect_dst_surface, &dirty_rect.bounding_box, refresh_mode );
-            else
-                refreshSurface( effect_dst_surface, NULL, refresh_mode );
-        }
-    }
+    int refresh_mode = refreshMode();
+
+    if (effect_no == 1)
+        refreshSurface( effect_dst_surface, &dirty_rect.bounding_box, refresh_mode );
+    else
+        refreshSurface( effect_dst_surface, NULL, refresh_mode );
 }
 
-bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface )
+bool ONScripter::setEffect( EffectLink *effect )
 {
     if ( effect->effect == 0 ) return true;
 
@@ -62,7 +53,7 @@ bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool u
 
     SDL_BlitSurface( accumulation_surface, NULL, effect_src_surface, NULL );
 
-    generateEffectDst(effect_no, generate_effect_dst, update_backup_surface);
+    generateEffectDst(effect_no);
     update_effect_dst = false;
     
     /* Load mask image */
@@ -103,7 +94,7 @@ bool ONScripter::setEffect( EffectLink *effect, bool generate_effect_dst, bool u
     return false;
 }
 
-bool ONScripter::doEffect( EffectLink *effect, bool generate_effect_dst, bool update_backup_surface, bool clear_dirty_region )
+bool ONScripter::doEffect( EffectLink *effect, bool clear_dirty_region )
 {
     effect_start_time = SDL_GetTicks();
     if ( effect_counter == 0 ) effect_start_time_old = effect_start_time - 1;
@@ -116,7 +107,7 @@ bool ONScripter::doEffect( EffectLink *effect, bool generate_effect_dst, bool up
         effect_no = 1;
 
     if (update_effect_dst){
-        generateEffectDst(effect_no, generate_effect_dst, update_backup_surface);
+        generateEffectDst(effect_no);
         update_effect_dst = false;
     }
     

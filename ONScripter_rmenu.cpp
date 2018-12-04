@@ -2,7 +2,7 @@
  *
  *  ONScripter_rmenu.cpp - Right click menu handler of ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -361,7 +361,6 @@ bool ONScripter::executeSystemLoad()
                 return false;
 
             leaveSystemCall( false );
-            refreshSurface(backup_surface, NULL, REFRESH_NORMAL_MODE);
             saveon_flag = true;
             internal_saveon_flag = true;
             text_on_flag = false;

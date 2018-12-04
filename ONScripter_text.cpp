@@ -432,14 +432,13 @@ void ONScripter::enterTextDisplayMode(bool text_flag)
     }
     
     if (!(display_mode & DISPLAY_MODE_TEXT)){
-        refreshSurface( effect_dst_surface, NULL, refresh_shadow_text_mode );
         dirty_rect.clear();
         dirty_rect.add( sentence_font_info.pos );
-
-        if (setEffect(&window_effect, false, true)) return;
-        while(doEffect(&window_effect, false, true, false));
-
         display_mode = DISPLAY_MODE_TEXT;
+
+        if (setEffect(&window_effect)) return;
+        while(doEffect(&window_effect, false));
+
         text_on_flag = true;
     }
 }
@@ -449,13 +448,11 @@ void ONScripter::leaveTextDisplayMode(bool force_leave_flag)
     if (display_mode & DISPLAY_MODE_TEXT &&
         (force_leave_flag || erase_text_window_mode != 0)){
 
-        SDL_BlitSurface(backup_surface, NULL, effect_dst_surface, NULL);
         dirty_rect.add(sentence_font_info.pos);
-            
-        if (setEffect(&window_effect, false, false)) return;
-        while(doEffect(&window_effect, false, false, false));
-
         display_mode = DISPLAY_MODE_NORMAL;
+            
+        if (setEffect(&window_effect)) return;
+        while(doEffect(&window_effect, false));
     }
 }
 

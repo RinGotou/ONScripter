@@ -48,10 +48,8 @@ int ONScripter::calcDurationToNextAnimation()
 
     if (!textgosub_label &&
          (clickstr_state == CLICK_WAIT || clickstr_state == CLICK_NEWPAGE)){
-        AnimationInfo *anim;
-        if      (clickstr_state == CLICK_WAIT)
-            anim = &cursor_info[0];
-        else if (clickstr_state == CLICK_NEWPAGE)
+        AnimationInfo *anim = &cursor_info[0]; // CLICK_WAIT
+        if (clickstr_state == CLICK_NEWPAGE)
             anim = &cursor_info[1];
 
         if (anim->visible && anim->is_animatable){
@@ -109,10 +107,8 @@ void ONScripter::proceedAnimation(int current_time)
 
     if (!textgosub_label &&
         (clickstr_state == CLICK_WAIT || clickstr_state == CLICK_NEWPAGE)){
-        AnimationInfo *anim;
-        if (clickstr_state == CLICK_WAIT)
-            anim = &cursor_info[0];
-        else if (clickstr_state == CLICK_NEWPAGE)
+        AnimationInfo *anim = &cursor_info[0]; // CLICK_WAIT
+        if (clickstr_state == CLICK_NEWPAGE)
             anim = &cursor_info[1];
         
         if (anim->proceedAnimation(current_time)){
