@@ -341,8 +341,8 @@ int ONScripter::playMPEG(const char *filename, bool click_flag, bool loop_flag)
         SDL_Delay( 1 );
     }
 
-    stopSMPEG();
     Mix_HookMusic( NULL, NULL );
+    stopSMPEG();
     openAudio();
 #if defined(USE_SDL_RENDERER)
     delete[] pixel_buf;
