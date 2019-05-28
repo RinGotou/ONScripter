@@ -2,7 +2,7 @@
  * 
  *  ONScripter_command.cpp - Command executer of ONScripter
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -1736,6 +1736,15 @@ int ONScripter::lspCommand()
         ai->scalePosXY( screen_ratio1, screen_ratio2 );
 
         ai->default_alpha = 0;
+
+        sprintf(filename, ":a;>%d,%d,#000000", w, h);
+        effect_src_info.setImageName( filename );
+        effect_src_info.orig_pos.x = 0;
+        effect_src_info.orig_pos.y = 0;
+        effect_src_info.scalePosXY( screen_ratio1, screen_ratio2 );
+        effect_src_info.blending_mode = AnimationInfo::BLEND_ADD2;
+        parseTaggedString( &effect_src_info );
+        setupAnimationInfo( &effect_src_info );
     }
     else{
         ai->setImageName( buf );
@@ -1980,7 +1989,7 @@ static void smpeg_filter_callback( SDL_Overlay * dst, SDL_Overlay * src, SDL_Rec
     if (!ai) return;
 
     ai->convertFromYUV(src);
-    ons->updateEffectDst();
+    ons->updateEffect();
 }
 
 static void smpeg_filter_destroy( struct SMPEG_Filter * filter )
@@ -2989,7 +2998,7 @@ int ONScripter::drawtextCommand()
     clip.x = clip.y = 0;
     clip.w = accumulation_surface->w;
     clip.h = accumulation_surface->h;
-    text_info.blendOnSurface( accumulation_surface, 0, 0, clip );
+    text_info.blendOnSurface( accumulation_surface, 0, 0, clip, layer_alpha_buf );
     
     return RET_CONTINUE;
 }
@@ -3019,7 +3028,7 @@ int ONScripter::drawsp3Command()
         ai->inv_mat[1][1] =  ai->mat[0][0] * 1000 / denom;
     }
 
-    ai->blendOnSurface2( accumulation_surface, x, y, screen_rect, alpha );
+    ai->blendOnSurface2( accumulation_surface, x, y, screen_rect, layer_alpha_buf, alpha );
     ai->setCell(old_cell_no);
 
     return RET_CONTINUE;
@@ -3041,7 +3050,7 @@ int ONScripter::drawsp2Command()
     ai->calcAffineMatrix();
     ai->setCell(cell_no);
 
-    ai->blendOnSurface2( accumulation_surface, ai->pos.x, ai->pos.y, screen_rect, alpha );
+    ai->blendOnSurface2( accumulation_surface, ai->pos.x, ai->pos.y, screen_rect, layer_alpha_buf, alpha );
 
     return RET_CONTINUE;
 }
@@ -3061,7 +3070,7 @@ int ONScripter::drawspCommand()
     clip.x = clip.y = 0;
     clip.w = accumulation_surface->w;
     clip.h = accumulation_surface->h;
-    ai->blendOnSurface( accumulation_surface, x, y, clip, alpha );
+    ai->blendOnSurface( accumulation_surface, x, y, clip, layer_alpha_buf, alpha );
     ai->setCell(old_cell_no);
 
     return RET_CONTINUE;
@@ -3091,7 +3100,7 @@ int ONScripter::drawbgCommand()
     clip.x = clip.y = 0;
     clip.w = accumulation_surface->w;
     clip.h = accumulation_surface->h;
-    bg_info.blendOnSurface( accumulation_surface, bg_info.pos.x, bg_info.pos.y, clip );
+    bg_info.blendOnSurface( accumulation_surface, bg_info.pos.x, bg_info.pos.y, clip, layer_alpha_buf );
     
     return RET_CONTINUE;
 }
@@ -3107,7 +3116,7 @@ int ONScripter::drawbg2Command()
     bi.rot     = script_h.readInt();
     bi.calcAffineMatrix();
 
-    bi.blendOnSurface2( accumulation_surface, bi.pos.x, bi.pos.y, screen_rect, 255 );
+    bi.blendOnSurface2( accumulation_surface, bi.pos.x, bi.pos.y, screen_rect, layer_alpha_buf, 255 );
 
     return RET_CONTINUE;
 }

@@ -2,7 +2,7 @@
  * 
  *  ONScripter.cpp - Execution block parser of ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -244,6 +244,7 @@ ONScripter::ONScripter()
     sprite2_info = new AnimationInfo[MAX_SPRITE2_NUM];
     texture_info = new AnimationInfo[MAX_TEXTURE_NUM];
     smpeg_info = NULL;
+    layer_alpha_buf = NULL;
     current_button_state.down_flag = false;
 
     int i;
@@ -379,6 +380,7 @@ int ONScripter::init()
     backup_surface       = AnimationInfo::allocSurface( screen_width, screen_height, texture_format );
     effect_src_surface   = AnimationInfo::allocSurface( screen_width, screen_height, texture_format );
     effect_dst_surface   = AnimationInfo::allocSurface( screen_width, screen_height, texture_format );
+    layer_alpha_buf = new unsigned char[screen_width*screen_height];
 
 #if defined(USE_SDL_RENDERER)
     screenshot_surface = AnimationInfo::alloc32bitSurface( screen_device_width, screen_device_height, texture_format );
@@ -400,6 +402,7 @@ int ONScripter::init()
     text_info.num_of_cells = 1;
     text_info.allocImage( screen_width, screen_height, texture_format );
     text_info.fill(0, 0, 0, 0);
+    text_info.blending_mode = AnimationInfo::BLEND_ADD2;
 
     // ----------------------------------------
     // Initialize font
@@ -529,10 +532,6 @@ void ONScripter::reset()
     all_sprite_hide_flag = false;
     all_sprite2_hide_flag = false;
 
-    if (breakup_cells) delete[] breakup_cells;
-    if (breakup_mask) delete[] breakup_mask;
-    if (breakup_cellforms) delete[] breakup_cellforms;
-
     if (resize_buffer_size != 16){
         delete[] resize_buffer;
         resize_buffer = new unsigned char[16];
@@ -622,6 +621,7 @@ void ONScripter::resetSub()
     for (i=0 ; i<MAX_SPRITE2_NUM ; i++) sprite2_info[i].reset();
     for (i=0 ; i<MAX_TEXTURE_NUM ; i++) texture_info[i].reset();
     smpeg_info = NULL;
+    effect_src_info.reset();
     barclearCommand();
     prnumclearCommand();
     for (i=0 ; i<2 ; i++) cursor_info[i].reset();

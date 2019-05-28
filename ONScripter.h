@@ -2,7 +2,7 @@
  * 
  *  ONScripter.h - Execution block parser of ONScripter
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -305,7 +305,7 @@ public:
     void NSDSetSpriteCommand(int spnum, int texnum, const char *tag);
 
     void stopSMPEG();
-    void updateEffectDst();
+    void updateEffect();
     
 private:
     // ----------------------------------------
@@ -462,8 +462,9 @@ private:
     int  effect_timer_resolution;
     int  effect_start_time;
     int  effect_start_time_old;
-    volatile bool update_effect_dst;
+    volatile bool update_effect;
     
+    void generateEffectSrc(bool update);
     void generateEffectDst(int effect_no);
     bool setEffect( EffectLink *effect );
     bool doEffect( EffectLink *effect, bool clear_dirty_region=true );
@@ -563,8 +564,8 @@ private:
     SDL_Surface *accumulation_surface; // Final image, i.e. picture_surface (+ shadow + text_surface)
     SDL_Surface *backup_surface; // Final image w/o (shadow + text_surface) used in leaveTextDisplayMode()
     SDL_Surface *screen_surface; // Text + Select_image + Tachi image + background
-    SDL_Surface *effect_dst_surface; // Intermediate source buffer for effect
-    SDL_Surface *effect_src_surface; // Intermediate destnation buffer for effect
+    SDL_Surface *effect_src_surface; // Intermediate source buffer for effect
+    SDL_Surface *effect_dst_surface; // Intermediate destination buffer for effect
     SDL_Surface *screenshot_surface; // Screenshot
     int screenshot_w, screenshot_h;
     SDL_Surface *image_surface; // Reference for loadImage()
@@ -673,6 +674,8 @@ private:
     unsigned char *layer_smpeg_buffer;
     bool layer_smpeg_loop_flag;
     AnimationInfo *smpeg_info;
+    AnimationInfo effect_src_info;
+    unsigned char *layer_alpha_buf; // alpha component of (movie) layer
 #if defined(USE_SMPEG)
     SMPEG* layer_smpeg_sample;
     SMPEG_Filter layer_smpeg_filter;

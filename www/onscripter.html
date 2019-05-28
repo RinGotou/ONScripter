@@ -19,7 +19,7 @@
 最近あまり時間がとれないため更新が非常に遅くなることがありますがご了承下さい。<br>
 Since: Feb. 6, 2002<br>
 <!--Last updated: Mar. 21, 2016 (BTS復旧)<br>-->
-Last updated: Dec. 18, 2018 (ソース更新)<br>
+Last updated: May 27, 2019 (ソース更新)<br>
 <!--Last updated: Jun. 29, 2014 (PNaCl バイナリパッケージ追加)<br>-->
 <!--Last updated: Jul. 12, 2009 (Experimental ソース更新)<br>-->
 </div> <!-- header -->
@@ -35,7 +35,7 @@ Last updated: Dec. 18, 2018 (ソース更新)<br>
       <li> <a href="#package-source">ソースパッケージ</a></li>
       <li> <a href="#package-binary">バイナリパッケージ</a></li>
       <li> <a href="#feature">特長</a>
-      <li> <a href="onscripter_devel.2018.html">開発日誌</a></li>
+      <li> <a href="onscripter_devel.2019.html">開発日誌</a></li>
       <li> <a href="/cgi-bin/kagemai/guest.cgi?project=onscripter&amp;action=top">バグ報告</a></li>
       <li> <a href="android/">ONScripter on Android</a>
       <li> <a href="ios/">ONScripter on iOS</a>
@@ -88,10 +88,10 @@ Last updated: Dec. 18, 2018 (ソース更新)<br>
 
 <table><tr>
 <td>最新版</td>
-<td><a href="onscripter-20181218.tar.gz">onscripter-20181218.tar.gz</a></td>
+<td><a href="onscripter-20190527.tar.gz">onscripter-20190527.tar.gz</a></td>
 </tr><tr>
 <td>旧版</td>
-<td><a href="onscripter-20181202.tar.gz">onscripter-20181202.tar.gz</a></td>
+<td><a href="onscripter-20181218.tar.gz">onscripter-20181218.tar.gz</a></td>
 </tr></table>
 <!--  <li> <a href="onscripter-exp-20090712.tar.gz">onscripter-exp-20090712.tar.gz</a>(実験版, バグ修正)-->
 
@@ -106,18 +106,14 @@ Last updated: Dec. 18, 2018 (ソース更新)<br>
 <tr><td><a href="android/">ONScripter on Android のページ</a><br>　自作ノベルゲームアプリの作成にも利用できます</td></tr>
 <tr><td>Zaurus (SL-C700, etc.)</td><td><a href="zaurus/index.html">SDL on Zaurus のページ</a></td></tr>
 
-<tr><td rowspan=5>Linux</td><td class="span">Debian 公式 <a href="http://packages.debian.org/sid/onscripter">Unstable (Sid)</a></td></tr>
-<tr><td class="span">Debian 公式 <a href="http://packages.debian.org/jessie/onscripter">Testing (Jessie)</a></td></tr>
-<tr><td class="span">Debian 公式 <a href="http://packages.debian.org/wheezy/onscripter">Stable (Wheezy)</a></td></tr>
-<tr><td class="span"><a href="http://detroit.ddo.jp/hiki.cgi?Debian">Debian 非公式 (Etch, Sarge, Woody, Potato)</a></td></tr>
-<tr><td><a href="http://onscripter.unclemion.com/onscripter/">Uncle Mion's ONScripter Corner</a> <span style="color:red">(ONScripter-EN)</span></td></tr>
+<tr><td rowspan=3>Linux</td><td class="span">Debian 公式 <a href="http://packages.debian.org/sid/onscripter">Unstable (Sid)</a></td></tr>
+<tr><td class="span">Debian 公式 <a href="http://packages.debian.org/buster/onscripter">Testing (buster)</a></td></tr>
+<tr><td class="span">Debian 公式 <a href="http://packages.debian.org/stretch/onscripter">Stable (stretch)</a></td></tr>
 
-<tr><td rowspan=3>MacOSX</td><td class="span"><a href="https://github.com/Homebrew/homebrew-core/tree/master/Formula/onscripter.rb">Homebrew</a></td></tr>
+<tr><td rowspan=2>MacOSX</td><td class="span"><a href="https://github.com/Homebrew/homebrew-core/tree/master/Formula/onscripter.rb">Homebrew</a></td></tr>
 <tr><td><a href="http://tmkk.pv.land.to/onscripter/">ONScripter Launcher and Binary for Mac OS X</a></td></tr>
-<tr><td><a href="http://onscripter.unclemion.com/onscripter/">Uncle Mion's ONScripter Corner</a> <span style="color:red">(ONScripter-EN)</span></td></tr>
 
-<tr><td rowspan=2>Windows</td><td class="span"><a href="http://www.geocities.jp/stm_torm/ons/win.html">霧雨の降る日に</a></td></tr>
-<tr><td><a href="http://onscripter.unclemion.com/onscripter/">Uncle Mion's ONScripter Corner</a> <span style="color:red">(ONScripter-EN)</span></td></tr>
+<tr><td rowspan=1>Windows</td><td class="span"><a href="http://www.geocities.jp/stm_torm/ons/win.html">霧雨の降る日に</a></td></tr>
 
 <tr><td>PNaCl</td><td><a href="http://neo.idletime.tokyo/web/onscripter/">IdleTime</a> (Google Chrome から実行できます)</td></tr>
 
@@ -488,6 +484,9 @@ ret = 2
 <p> 文字を表示するためには、等幅の TrueType font を用意する必要があります。例えば Windows 7 には c:\Windows\Fonts の下に msgothic.ttc (ＭＳゴシック)があり、またフリーで手にはいるフォントには以下のものがあります。<br>
 
 <dl>
+  <dt> <a href="http://jikasei.me/font/genjyuu/">源柔ゴシック</a>
+  <dd> <a href="http://ja.wikipedia.org/wiki/Source_Han_Sans">源ノ角ゴシック</a>を TrueType 形式に変換し、角を丸める加工を行い丸ゴシック風にした派生フォントです。特に GenJyuuGothicX-Monospace-Bold.ttf がきれいな太字で見やすくお勧めです。
+
   <dt> <a href="http://mix-mplus-ipa.osdn.jp/">M+とIPAの合成フォント</a>
   <dd> M+ フォントと IPA フォントを元にした再配布可能なフォントです。特に Migu-2M-bold.ttf がきれいな太字で見やすくお勧めです。
 
@@ -750,7 +749,7 @@ return
 
 <div id="footer">
 メール宛先 <i>ogapee@yahoo.kp at aqua.dti2.ne.jp</i> （yahoo.kp at は除いてください）<br>
-Copyright (c) 1998-2018 Studio O.G.A. All rights reserved.
+Copyright (c) 1998-2019 Studio O.G.A. All rights reserved.
 </div> <!-- footer -->
 
 </div> <!-- body -->

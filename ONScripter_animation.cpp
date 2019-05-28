@@ -2,7 +2,7 @@
  * 
  *  ONScripter_animation.cpp - Methods to manipulate AnimationInfo
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -389,9 +389,9 @@ void ONScripter::drawTaggedSurface( SDL_Surface *dst_surface, AnimationInfo *ani
     }
 
     if (!anim->affine_flag)
-        anim->blendOnSurface( dst_surface, poly_rect.x, poly_rect.y, clip, anim->trans );
+        anim->blendOnSurface( dst_surface, poly_rect.x, poly_rect.y, clip, layer_alpha_buf, anim->trans );
     else
-        anim->blendOnSurface2( dst_surface, poly_rect.x, poly_rect.y, clip, anim->trans );
+        anim->blendOnSurface2( dst_surface, poly_rect.x, poly_rect.y, clip, layer_alpha_buf, anim->trans );
 }
 
 void ONScripter::stopAnimation( int click )

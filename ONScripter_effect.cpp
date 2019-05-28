@@ -2,7 +2,7 @@
  * 
  *  ONScripter_effect.cpp - Effect executer of ONScripter
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -27,11 +27,33 @@
 #define EFFECT_STRIPE_CURTAIN_WIDTH (24 * screen_ratio1 / screen_ratio2)
 #define EFFECT_QUAKE_AMP (12 * screen_ratio1 / screen_ratio2)
 
-void ONScripter::updateEffectDst()
+void ONScripter::updateEffect()
 {
-    update_effect_dst = true;
+    update_effect = true;
     dirty_rect.fill( screen_width, screen_height );
 };
+
+void ONScripter::generateEffectSrc(bool update)
+{
+    if (smpeg_info && smpeg_info->visible){
+        if (update){
+            SDL_Rect clip;
+            clip.x = clip.y = 0;
+            clip.w = effect_src_surface->w;
+            clip.h = effect_src_surface->h;
+            smpeg_info->blendOnSurface(effect_src_surface, 0, 0, clip, layer_alpha_buf);
+            effect_src_info.blendOnSurface(effect_src_surface, 0, 0, clip, layer_alpha_buf);
+        }
+        else{
+            effect_src_info.subtract(accumulation_surface, smpeg_info, layer_alpha_buf);
+            SDL_BlitSurface(accumulation_surface, NULL, effect_src_surface, NULL );
+        }
+    }
+    else{
+        if (!update)
+            SDL_BlitSurface(accumulation_surface, NULL, effect_src_surface, NULL );
+    }
+}
 
 void ONScripter::generateEffectDst(int effect_no)
 {
@@ -51,10 +73,9 @@ bool ONScripter::setEffect( EffectLink *effect )
     if (effect_cut_flag && (skip_mode & SKIP_NORMAL || ctrl_pressed_status)) 
         effect_no = 1;
 
-    SDL_BlitSurface( accumulation_surface, NULL, effect_src_surface, NULL );
-
+    generateEffectSrc(false);
     generateEffectDst(effect_no);
-    update_effect_dst = false;
+    update_effect = false;
     
     /* Load mask image */
     if ( effect_no == 15 || effect_no == 18 ){
@@ -106,9 +127,10 @@ bool ONScripter::doEffect( EffectLink *effect, bool clear_dirty_region )
     if (effect_cut_flag && (skip_mode & SKIP_NORMAL || ctrl_pressed_status)) 
         effect_no = 1;
 
-    if (update_effect_dst){
+    if (update_effect){
+        generateEffectSrc(true);
         generateEffectDst(effect_no);
-        update_effect_dst = false;
+        update_effect = false;
     }
     
     int i, amp;
