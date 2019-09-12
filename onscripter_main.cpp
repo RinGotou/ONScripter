@@ -2,7 +2,7 @@
  * 
  *  onscripter_main.cpp -- main function of ONScripter
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -112,6 +112,7 @@ extern "C"
 {
 #include <jni.h>
 #include <android/log.h>
+#include <errno.h>
 static JavaVM *jniVM = NULL;
 static jobject JavaONScripter = NULL;
 static jmethodID JavaPlayVideo = NULL;
@@ -185,7 +186,7 @@ FILE *fopen_ons(const char *path, const char *mode)
     if (mode[0] == 'w') mode2 = 1;
 
     FILE *fp = fopen(path, mode);
-    if (fp || mode2 ==0) return fp;
+    if (fp || mode2 ==0 || errno != EACCES) return fp;
     
     JNIEnv * jniEnv = NULL;
     jniVM->AttachCurrentThread(&jniEnv, NULL);
@@ -208,8 +209,11 @@ FILE *fopen_ons(const char *path, const char *mode)
 }
 
 #undef mkdir
+extern int mkdir(const char *pathname, mode_t mode);
 int mkdir_ons(const char *pathname, mode_t mode)
 {
+    if (mkdir(pathname, mode) == 0 || errno != EACCES) return 0;
+    
     JNIEnv * jniEnv = NULL;
     jniVM->AttachCurrentThread(&jniEnv, NULL);
 
