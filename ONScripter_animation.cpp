@@ -207,6 +207,9 @@ void ONScripter::setupAnimationInfo( AnimationInfo *anim, FontInfo *info )
         int location;
         SDL_Surface *surface = loadImage( anim->file_name, &has_alpha, &location, &anim->default_alpha );
 
+        if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 && has_alpha)
+            anim->trans_mode = AnimationInfo::TRANS_ALPHA;
+
         SDL_Surface *surface_m = NULL;
         if (anim->trans_mode == AnimationInfo::TRANS_MASK)
             surface_m = loadImage( anim->mask_file_name );
@@ -277,7 +280,7 @@ void ONScripter::parseTaggedString( AnimationInfo *anim )
                 anim->font_size_xy[0] = script_h.readInt();
                 anim->font_size_xy[1] = script_h.readInt();
                 anim->font_pitch[0] = anim->font_size_xy[0];
-                anim->font_pitch[1] = anim->font_size_xy[0]; // dummy
+                anim->font_pitch[1] = anim->font_size_xy[1];
                 if ( script_h.getEndStatus() & ScriptHandler::END_COMMA ){
                     anim->font_pitch[0] += script_h.readInt();
                     if ( script_h.getEndStatus() & ScriptHandler::END_COMMA ){

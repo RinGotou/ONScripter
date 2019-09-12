@@ -2,7 +2,7 @@
  * 
  *  ONScripter_lut.cpp - command lookup-table for ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -219,6 +219,8 @@ static ONScripter::FuncLUT func_lut[] = {
     {"len",				&ONScripter::lenCommand},
     {"ld",				&ONScripter::ldCommand},
     {"layermessage",	&ONScripter::layermessageCommand},
+    {"langjp",			&ONScripter::langjpCommand},
+    {"langen",			&ONScripter::langenCommand},
     {"labellog",		&ONScripter::labellogCommand},
 
     {"kinsoku",			&ONScripter::kinsokuCommand},
@@ -263,6 +265,7 @@ static ONScripter::FuncLUT func_lut[] = {
     {"getsavestr",		&ONScripter::getsavestrCommand},
     {"getret",			&ONScripter::getretCommand},
     {"getreg",			&ONScripter::getregCommand},
+    {"getreadlang",		&ONScripter::getreadlangCommand},
     {"getparam2",		&ONScripter::getparamCommand},
     {"getparam",		&ONScripter::getparamCommand},
     {"getpageup",		&ONScripter::getpageupCommand},

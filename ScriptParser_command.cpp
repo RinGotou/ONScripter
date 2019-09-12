@@ -2,7 +2,7 @@
  *
  *  ScriptParser_command.cpp - Define command executer of ONScripter
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -620,16 +620,27 @@ int ScriptParser::midCommand()
     unsigned int len   = script_h.readInt();
 
     ScriptHandler::VariableData &vd = script_h.getVariableData(no);
-    if ( vd.str ) delete[] vd.str;
-    if ( start >= strlen(save_buf) ){
+    if (vd.str) delete[] vd.str;
+    if (start >= strlen(save_buf)){
         vd.str = NULL;
     }
     else{
-        if ( start+len > strlen(save_buf ) )
-            len = strlen(save_buf) - start;
-        vd.str = new char[len+1];
-        memcpy( vd.str, save_buf+start, len );
-        vd.str[len] = '\0';
+        unsigned int len2 = 0;
+        if (script_h.enc.getEncoding() == Encoding::CODE_UTF8){
+            for (unsigned int i=0; i<start; i++)
+                save_buf += script_h.enc.getBytes(*save_buf);
+            for (unsigned int i=0; i<len; i++)
+                len2 += script_h.enc.getBytes(save_buf[len2]);
+        }
+        else{
+            save_buf += start;
+            len2 = len;
+        }
+        if (len2 > strlen(save_buf))
+            len2 = strlen(save_buf);
+        vd.str = new char[len2+1];
+        memcpy(vd.str, save_buf, len2);
+        vd.str[len2] = '\0';
     }
 
     return RET_CONTINUE;
@@ -825,12 +836,12 @@ int ScriptParser::itoaCommand()
 
     int val = script_h.readInt();
 
-    char val_str[20];
+    char val_str[30];
     if (itoa2_flag)
         script_h.getStringFromInteger(val_str, val, -1);
     else
-        sprintf( val_str, "%d", val );
-    setStr( &script_h.getVariableData(no).str, val_str );
+        sprintf(val_str, "%d", val);
+    setStr(&script_h.getVariableData(no).str, val_str);
     
     return RET_CONTINUE;
 }

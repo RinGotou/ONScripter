@@ -22,6 +22,7 @@
     <ClCompile Include="AnimationInfo.cpp" />
     <ClCompile Include="DirectReader.cpp" />
     <ClCompile Include="DirtyRect.cpp" />
+    <ClCompile Include="Encoding.cpp" />
     <ClCompile Include="FontInfo.cpp" />
     <ClCompile Include="LUAHandler.cpp" />
     <ClCompile Include="NsaReader.cpp" />

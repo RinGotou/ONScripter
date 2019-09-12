@@ -37,6 +37,7 @@
 extern SDL_TimerID timer_bgmfade_id;
 extern "C" Uint32 SDLCALL bgmfadeCallback( Uint32 interval, void *param );
 extern "C" void smpegCallback();
+extern unsigned short convUTF162SJIS(unsigned short in);
     
 #define CONTINUOUS_PLAY
 
@@ -552,12 +553,8 @@ int ONScripter::splitCommand()
     while( script_h.getEndStatus() & ScriptHandler::END_COMMA ){
 
         unsigned int c=0;
-        while(save_buf[c] != delimiter && save_buf[c] != '\0'){
-            if (IS_TWO_BYTE(save_buf[c]))
-                c += 2;
-            else
-                c++;
-        }
+        while(save_buf[c] != delimiter && save_buf[c] != '\0')
+            c += script_h.enc.getBytes(save_buf[c]);
         
         if (c < 256) 
             token = token256;
@@ -681,11 +678,17 @@ void ONScripter::setwindowCore()
         ai->scalePosWH( screen_ratio1, screen_ratio2 );
     }
     else{
-        ai->setImageName( buf );
-        parseTaggedString( ai );
-        setupAnimationInfo( ai );
+        if (buf[0] != 0){
+            ai->setImageName(buf);
+            parseTaggedString(ai);
+            setupAnimationInfo(ai);
+        }
         ai->orig_pos.x = script_h.readInt();
         ai->orig_pos.y = script_h.readInt();
+        if (script_h.getEndStatus() & ScriptHandler::END_COMMA)
+            script_h.readInt();
+        if (script_h.getEndStatus() & ScriptHandler::END_COMMA)
+            script_h.readInt();
         ai->scalePosXY( screen_ratio1, screen_ratio2 );
 
         sentence_font.is_transparent = false;
@@ -967,6 +970,23 @@ int ONScripter::savescreenshotCommand()
     resizeSurface( screenshot_surface, surface );
 
     const char *buf = script_h.readStr();
+    if (script_h.enc.getEncoding() == Encoding::CODE_UTF8){
+        char *dir = new char[strlen(archive_path) + strlen(buf) + 1];
+        sprintf(dir, "%s%s", archive_path, buf);
+        for (int i=strlen(dir)-1; i>=0; i--){
+            if (dir[i] == '/' || dir[i] == '\\'){
+                dir[i] = 0;
+#if defined(LINUX) || defined(MACOSX) || defined(IOS)
+                mkdir(dir, 0755);
+#elif defined(WIN32)
+                _mkdir(dir);
+#endif
+                break;
+            }
+        }
+        delete[] dir;
+    }
+    
     FILE *fp = fopen(buf, "wb");
     if (fp){
         SDL_RWops *rwops = SDL_RWFromFP(fp, SDL_TRUE);
@@ -1514,11 +1534,10 @@ int ONScripter::movieCommand()
 
     script_h.readStr();
     const char *filename = script_h.saveStringBuffer();
-    
-    stopBGM(false);
 
     bool click_flag = false;
     bool loop_flag = false;
+    bool nosound_flag = false;
 
     while (script_h.getEndStatus() & ScriptHandler::END_COMMA){
         if (script_h.compareString("pos")){ // not supported yet
@@ -1541,12 +1560,18 @@ int ONScripter::movieCommand()
             script_h.readLabel();
             fprintf(stderr, " [movie async] is not supported yet!!\n");
         }
+        else if (script_h.compareString("nosound")){
+            script_h.readLabel();
+            nosound_flag = true;
+        }
         else{
             script_h.readLabel();
         }
     }
     
-    if (playMPEG(filename, click_flag, loop_flag)) endCommand();
+    if (!nosound_flag) stopBGM(false);
+
+    if (playMPEG(filename, click_flag, loop_flag, nosound_flag)) endCommand();
 
     return RET_CONTINUE;
 }
@@ -2061,6 +2086,20 @@ int ONScripter::layermessageCommand()
     return RET_CONTINUE;
 }
 
+int ONScripter::langjpCommand()
+{
+    current_read_language = 1;
+    
+    return RET_CONTINUE;
+}
+
+int ONScripter::langenCommand()
+{
+    current_read_language = 0;
+    
+    return RET_CONTINUE;
+}
+
 int ONScripter::kinsokuCommand()
 {
     if (script_h.compareString("on")){
@@ -2291,10 +2330,13 @@ int ONScripter::gettagCommand()
 
     char *buf = pretext_buf;
 
+    int n = script_h.enc.getBytes(buf[0]);
+    unsigned short unicode1 = script_h.enc.getUTF16(buf);
+    unsigned short unicode2 = script_h.enc.getUTF16("¡Ú", Encoding::CODE_CP932);
     if (buf[0] == '[')
         buf++;
-    else if (zenkakko_flag && buf[0] == "¡Ú"[0] && buf[1] == "¡Ú"[1])
-        buf += 2;
+    else if (zenkakko_flag && unicode1 == unicode2)
+        buf += n;
     else
         buf = NULL;
     
@@ -2314,12 +2356,12 @@ int ONScripter::gettagCommand()
         else if ( script_h.pushed_variable.type & ScriptHandler::VAR_STR ){
             if (buf){
                 const char *buf_start = buf;
+                n = script_h.enc.getBytes(buf[0]);
+                unicode1 = script_h.enc.getUTF16(buf);
+                unicode2 = script_h.enc.getUTF16("¡Û", Encoding::CODE_CP932);
                 while(*buf != '/' && *buf != 0 && *buf != ']' && 
-                      (!zenkakko_flag || buf[0] != "¡Û"[0] || buf[1] != "¡Û"[1])){
-                    if (IS_TWO_BYTE(*buf))
-                        buf += 2;
-                    else
-                        buf++;
+                      (!zenkakko_flag || unicode1 != unicode2)){
+                    buf += n;
                 }
                 setStr( &script_h.getVariableData(script_h.pushed_variable.var_no).str, buf_start, buf-buf_start );
             }
@@ -2336,11 +2378,13 @@ int ONScripter::gettagCommand()
     }
     while(end_status & ScriptHandler::END_COMMA);
 
+    n = script_h.enc.getBytes(pretext_buf[0]);
+    unicode1 = script_h.enc.getUTF16(pretext_buf);
+    unicode2 = script_h.enc.getUTF16("¡Û", Encoding::CODE_CP932);
     if (pretext_buf[0] == ']')
         pretext_buf++;
-    else if (zenkakko_flag && 
-             pretext_buf[0] == "¡Û"[0] && pretext_buf[1] == "¡Û"[1])
-        pretext_buf += 2;
+    else if (zenkakko_flag && unicode1 == unicode2)
+        pretext_buf += n;
 
     return RET_CONTINUE;
 }
@@ -2438,6 +2482,14 @@ int ONScripter::getsavestrCommand()
     setStr( &script_h.getVariableData(script_h.pushed_variable.var_no).str, buf );
     if (buf) delete[] buf;
 
+    return RET_CONTINUE;
+}
+
+int ONScripter::getreadlangCommand()
+{
+    script_h.readInt();
+    script_h.setInt(&script_h.current_variable, current_read_language);
+    
     return RET_CONTINUE;
 }
 
@@ -2599,10 +2651,11 @@ int ONScripter::getlogCommand()
             char *p2 = buf = new char[page->text_count];
             count = 0;
             for (int i=0 ; i<page->text_count ; i++){
-                if (IS_TWO_BYTE(*p)){
-                    p2[count++] = *p++;
-                    p2[count++] = *p++;
-                    i++;
+                int n = script_h.enc.getBytes(*p);
+                if (n >= 2){
+                    for (int j=0; j<n; j++)
+                        p2[count++] = *p++;
+                    i += n-1;
                 }
                 else if (*p != 0x0a)
                     p2[count++] = *p++;
@@ -3380,9 +3433,31 @@ int ONScripter::captionCommand()
     DirectReader::convertFromSJISToUTF8(buf2, buf);
 #elif defined(LINUX) || (defined(WIN32) && defined(UTF8_CAPTION))
 #if defined(UTF8_CAPTION)
-    DirectReader::convertFromSJISToUTF8(buf2, buf);
+    if (script_h.enc.getEncoding() == Encoding::CODE_UTF8)
+        strcpy(buf2, buf);
+    else
+        DirectReader::convertFromSJISToUTF8(buf2, buf);
 #else
-    strcpy(buf2, buf);
+    if (script_h.enc.getEncoding() == Encoding::CODE_UTF8){
+        int c = 0;
+        while(buf[0] != 0){
+            int n = script_h.enc.getBytes(buf[0]);
+            unsigned short unicode = script_h.enc.getUTF16(buf);
+            if (n == 1){
+                buf2[c++] = unicode;
+            }
+            else{
+                unsigned short sjis = convUTF162SJIS(unicode);
+                buf2[c++] = sjis >> 8;
+                buf2[c++] = sjis & 0xff;
+            }
+            buf += n;
+        }
+        buf2[c] = 0;
+    }
+    else{
+        strcpy(buf2, buf);
+    }
     DirectReader::convertFromSJISToEUC(buf2);
 #endif
 #else
@@ -4085,9 +4160,10 @@ void ONScripter::NSDCallCommand(int texnum, const char *str1, int proc, const ch
         uchar3 color = {0xff, 0xff, 0xff};
         char *p = (char*)start[num_param-1], *p2 = (char*)start[num_param-1];
         while(*p){
-            if (IS_TWO_BYTE(*p)){
-                *p2++ = *p++;
-                *p2++ = *p++;
+            int n = script_h.enc.getBytes(*p);
+            if (n >= 2){
+                for (int i=0; i<n; i++)
+                    *p2++ = *p++;
             }
             else if (*p == '%'){
                 p++;

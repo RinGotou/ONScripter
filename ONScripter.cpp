@@ -26,7 +26,6 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-extern void initSJIS2UTF16();
 extern "C" void waveCallback( int channel );
 
 #define DEFAULT_AUDIOBUF  4096
@@ -181,8 +180,6 @@ void ONScripter::initSDL()
     screen_rect.w = screen_width;
     screen_rect.h = screen_height;
 
-    initSJIS2UTF16();
-    
     wm_title_string = new char[ strlen(DEFAULT_WM_TITLE) + 1 ];
     memcpy( wm_title_string, DEFAULT_WM_TITLE, strlen(DEFAULT_WM_TITLE) + 1 );
     wm_icon_string = new char[ strlen(DEFAULT_WM_ICON) + 1 ];
@@ -634,7 +631,7 @@ void ONScripter::resetSub()
 
 void ONScripter::resetSentenceFont()
 {
-    sentence_font.reset();
+    sentence_font.reset(script_h.enc.getEncoding());
     sentence_font.font_size_xy[0] = DEFAULT_FONT_SIZE;
     sentence_font.font_size_xy[1] = DEFAULT_FONT_SIZE;
     sentence_font.top_xy[0] = 21;

@@ -2,7 +2,7 @@
  *
  *  ScriptHandler.cpp - Script manipulation class
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -207,14 +207,18 @@ const char *ScriptHandler::readToken()
              ch == '!' || ch == '#' || ch == ',' || ch == '"'){ // text
         bool ignore_clickstr_flag = false;
         while(1){
-            if ( IS_TWO_BYTE(ch) ){
-                addStringBuffer( ch );
-                ch = *++buf;
-                if (ch == 0x0a || ch == '\0') break;
-                addStringBuffer( ch );
+            int n = enc.getBytes(ch);
+            char *old_buf = buf;
+            if (n >= 2){
+                for (int i=0; i<n-1; i++){
+                    addStringBuffer(ch);
+                    ch = *++buf;
+                    if (ch == 0x0a || ch == '\0') break;
+                }
+                addStringBuffer(ch);
                 buf++;
                 if (!wait_script && !ignore_clickstr_flag &&
-                    checkClickstr(buf-2) > 0)
+                    checkClickstr(old_buf) > 0)
                     wait_script = buf;
                 ignore_clickstr_flag = false;
             }
@@ -245,12 +249,11 @@ const char *ScriptHandler::readToken()
     else if (ch == '`'){
         ch = *++buf;
         while (ch != '`' && ch != 0x0a && ch !='\0'){
-            if ( IS_TWO_BYTE(ch) ){
-                addStringBuffer( ch );
+            int n = enc.getBytes(ch);
+            for (int i=0; i<n; i++){
+                addStringBuffer(ch);
                 ch = *++buf;
             }
-            addStringBuffer( ch );
-            ch = *++buf;
         }
         if (ch == '`') buf++;
         
@@ -397,12 +400,13 @@ void ScriptHandler::skipToken()
     bool quat_flag = false;
     bool text_flag = false;
     while(1){
-        if ( *buf == 0x0a || *buf == 0 ||
-             (!quat_flag && !text_flag && (*buf == ':' || *buf == ';') ) ) break;
-        if ( *buf == '"' ) quat_flag = !quat_flag;
-        if ( IS_TWO_BYTE(*buf) ){
-            buf += 2;
-            if ( !quat_flag ) text_flag = true;
+        if (*buf == 0x0a || *buf == 0 ||
+            (!quat_flag && !text_flag && (*buf == ':' || *buf == ';'))) break;
+        if (*buf == '"') quat_flag = !quat_flag;
+        int n = enc.getBytes(*buf);
+        if (n >= 2){
+            buf += n;
+            if (!quat_flag) text_flag = true;
         }
         else
             buf++;
@@ -672,11 +676,14 @@ int ScriptHandler::checkClickstr(const char *buf, bool recursive_flag)
         }
 #endif
         if (double_byte_check){
-            if ( click_buf[0] == buf[0] && click_buf[1] == buf[1] ){
-                if (!recursive_flag && checkClickstr(buf+2, true) > 0) return 0;
-                return 2;
+            unsigned short u1 = enc.getUTF16(click_buf);
+            unsigned short u2 = enc.getUTF16(buf);
+            int n = enc.getBytes(buf[0]);
+            if (u1 == u2){
+                if (!recursive_flag && checkClickstr(buf+n, true) > 0) return 0;
+                return n;
             }
-            click_buf += 2;
+            click_buf += n;
         }
         else{
             if ( click_buf[0] == buf[0] ){
@@ -800,34 +807,70 @@ int ScriptHandler::getStringFromInteger( char *buffer, int no, int num_column, b
     
     return num_column;
 #else
+    int code = enc.getEncoding();
+    int n = 2; // bytes per character
+    if (code == Encoding::CODE_UTF8)
+        n = 3;
     int c = 0;
     if (is_zero_inserted){
-        for (i=0 ; i<num_space ; i++){
-            buffer[c++] = ((char*)"‚O")[0];
-            buffer[c++] = ((char*)"‚O")[1];
+        if (code == Encoding::CODE_CP932){
+            for (i=0; i<num_space; i++){
+                buffer[c++] = ((char*)"‚O")[0];
+                buffer[c++] = ((char*)"‚O")[1];
+            }
+        }
+        if (code == Encoding::CODE_UTF8){
+            for (i=0; i<num_space; i++){
+                buffer[c++] = 0xef;
+                buffer[c++] = 0xbc;
+                buffer[c++] = 0x90;
+            }
         }
     }
     else{
-        for (i=0 ; i<num_space ; i++){
-            buffer[c++] = ((char*)"@")[0];
-            buffer[c++] = ((char*)"@")[1];
+        if (code == Encoding::CODE_CP932){
+            for (i=0; i<num_space; i++){
+                buffer[c++] = ((char*)"@")[0];
+                buffer[c++] = ((char*)"@")[1];
+            }
+        }
+        if (code == Encoding::CODE_UTF8){
+            for (i=0; i<num_space; i++){
+                buffer[c++] = 0xe3;
+                buffer[c++] = 0x80;
+                buffer[c++] = 0x80;
+            }
         }
     }
     if (num_minus == 1){
-        buffer[c++] = "|"[0];
-        buffer[c++] = "|"[1];
+        if (code == Encoding::CODE_CP932){
+            buffer[c++] = "|"[0];
+            buffer[c++] = "|"[1];
+        }
+        if (code == Encoding::CODE_UTF8){
+            buffer[c++] = 0xef;
+            buffer[c++] = 0xbc;
+            buffer[c++] = 0x8d;
+        }
     }
-    c = (num_column-1)*2;
+    c = (num_column-1)*n;
     char num_str[] = "‚O‚P‚Q‚R‚S‚T‚U‚V‚W‚X";
-    for (i=0 ; i<num_digit ; i++){
-        buffer[c]   = num_str[ no % 10 * 2];
-        buffer[c+1] = num_str[ no % 10 * 2 + 1];
+    for (i=0; i<num_digit; i++){
+        if (code == Encoding::CODE_CP932){
+            buffer[c]   = num_str[no % 10 * 2];
+            buffer[c+1] = num_str[no % 10 * 2 + 1];
+        }
+        if (code == Encoding::CODE_UTF8){
+            buffer[c]   = 0xef;
+            buffer[c+1] = 0xbc;
+            buffer[c+2] = 0x90 + no%10;
+        }
         no /= 10;
-        c -= 2;
+        c -= n;
     }
-    buffer[num_column*2] = '\0';
+    buffer[num_column*n] = '\0';
 
-    return num_column*2;
+    return num_column*n;
 #endif    
 }
 
@@ -984,6 +1027,10 @@ int ScriptHandler::readScript( char *path )
     }
     else if ((fp = fopen("nscript.dat", "rb")) != NULL){
         encrypt_mode = 1;
+    }
+    else if ((fp = fopen("pscript.dat", "rb")) != NULL){
+        encrypt_mode = 1;
+        enc.setEncoding(Encoding::CODE_UTF8);
     }
 
     if (fp == NULL){
@@ -1145,6 +1192,11 @@ void ScriptHandler::readConfiguration()
                 screen_width  = 320;
                 screen_height = 240;
                 buf += 3;
+            }
+            else if (!strncmp( buf, "w720", 4 )){
+                screen_width  = 1280;
+                screen_height = 720;
+                buf += 4;
             }
             else
                 break;
@@ -1386,7 +1438,9 @@ void ScriptHandler::parseStr( char **buf )
         }
         if ( !p_str_alias ){
             printf("can't find str alias for %s...\n", alias_buf );
-            exit(-1);
+            //exit(-1);
+            str_string_buffer[0] = '\0';
+            current_variable.type = VAR_NONE;
         }
         current_variable.type |= VAR_CONST;
     }

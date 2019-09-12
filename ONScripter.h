@@ -201,6 +201,8 @@ public:
     int loadgameCommand();
     int ldCommand();
     int layermessageCommand();
+    int langjpCommand();
+    int langenCommand();
     int kinsokuCommand();
     int jumpfCommand();
     int jumpbCommand();
@@ -227,6 +229,7 @@ public:
     int getsavestrCommand();
     int getretCommand();
     int getregCommand();
+    int getreadlangCommand();
     int getpageupCommand();
     int getpageCommand();
     int getmp3volCommand();
@@ -686,7 +689,7 @@ private:
     int playWave(Mix_Chunk *chunk, int format, bool loop_flag, int channel);
     int playMIDI(bool loop_flag);
     
-    int playMPEG(const char *filename, bool click_flag, bool loop_flag=false);
+    int playMPEG(const char *filename, bool click_flag, bool loop_flag=false, bool nosound_flag=false);
     int playAVI( const char *filename, bool click_flag );
     enum { WAVE_PLAY        = 0,
            WAVE_PRELOAD     = 1,

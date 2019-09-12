@@ -2,7 +2,7 @@
  * 
  *  ScriptParser.h - Define block parser of ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -388,6 +388,8 @@ protected:
             return ch;
         };
     } *page_list, *start_page, *current_page; // ring buffer
+    int  current_language;
+    int  current_read_language;
     int  max_page_list;
     int  clickstr_line;
     int  clickstr_state;
@@ -399,11 +401,11 @@ protected:
     bool english_mode;
 
     struct Kinsoku {
-        char chr[2];
+        unsigned short unicode;
     } *start_kinsoku, *end_kinsoku;
     bool is_kinsoku;
     int num_start_kinsoku, num_end_kinsoku;
-    void setKinsoku(const char *start_chrs, const char *end_chrs, bool add);
+    void setKinsoku(const char *start_chrs, const char *end_chrs, bool add, int code = -1);
     bool isStartKinsoku(const char *str);
     bool isEndKinsoku(const char *str);
     

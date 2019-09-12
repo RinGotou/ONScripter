@@ -19,6 +19,7 @@ GUI_OBJS = ONScripter$(OBJSUFFIX) \
 	AnimationInfo$(OBJSUFFIX) \
 	FontInfo$(OBJSUFFIX) \
 	DirtyRect$(OBJSUFFIX) \
+	Encoding$(OBJSUFFIX) \
 	resize_image$(OBJSUFFIX)
 
 DECODER_OBJS = DirectReader$(OBJSUFFIX) \
@@ -63,7 +64,8 @@ PARSER_HEADER = BaseReader.h \
 	AnimationInfo.h \
 	FontInfo.h \
 	DirtyRect.h \
-	LUAHandler.h
+	LUAHandler.h \
+	Encoding.h
 
 ONSCRIPTER_HEADER = ONScripter.h $(PARSER_HEADER)
 
@@ -97,7 +99,7 @@ clean:
 SarReader$(OBJSUFFIX):    BaseReader.h SarReader.h 
 NsaReader$(OBJSUFFIX):    BaseReader.h SarReader.h NsaReader.h 
 DirectReader$(OBJSUFFIX): BaseReader.h DirectReader.h
-ScriptHandler$(OBJSUFFIX): ScriptHandler.h
+ScriptHandler$(OBJSUFFIX): ScriptHandler.h Encoding.h
 ScriptParser$(OBJSUFFIX): $(PARSER_HEADER)
 ScriptParser_command$(OBJSUFFIX): $(PARSER_HEADER)
 
@@ -123,7 +125,7 @@ ONScripter_file2$(OBJSUFFIX): $(ONSCRIPTER_HEADER)
 ONScripter_image$(OBJSUFFIX): $(ONSCRIPTER_HEADER) resize_image.h
 ONScripter_lut$(OBJSUFFIX): $(ONSCRIPTER_HEADER)
 AnimationInfo$(OBJSUFFIX): AnimationInfo.h
-FontInfo$(OBJSUFFIX): FontInfo.h
+FontInfo$(OBJSUFFIX): FontInfo.h Encoding.h
 DirtyRect$(OBJSUFFIX) : DirtyRect.h
 AVIWrapper$(OBJSUFFIX): AVIWrapper.h
 LUAHandler$(OBJSUFFIX): $(ONSCRIPTER_HEADER) LUAHandler.h

@@ -2,7 +2,7 @@
  * 
  *  ScriptHandler.h - Script manipulation class
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "BaseReader.h"
+#include "Encoding.h"
 
 #define IS_TWO_BYTE(x) \
         ( ((x) & 0xe0) == 0xe0 || ((x) & 0xe0) == 0x80 )
@@ -238,6 +239,7 @@ public:
     int global_variable_border;
 
     BaseReader *cBR;
+    Encoding enc;
     
 private:
     enum { OP_INVALID = 0, // 000

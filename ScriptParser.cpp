@@ -2,7 +2,7 @@
  *
  *  ScriptParser.cpp - Define block parser of ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -43,6 +43,8 @@ extern "C"
 
 #define MAX_PAGE_LIST 16
 
+extern void initSJIS2UTF16();
+
 ScriptParser::ScriptParser()
 {
     debug_level = 0;
@@ -71,6 +73,7 @@ ScriptParser::ScriptParser()
     file_io_buf_len = 0;
     save_data_len = 0;
 
+    current_read_language = -1;
     render_font_outline = false;
     page_list = NULL;
 
@@ -84,9 +87,11 @@ ScriptParser::ScriptParser()
     for ( i=0 ; i<MENUSELECTVOICE_NUM ; i++ )
         menuselectvoice_file_name[i] = NULL;
 
+    initSJIS2UTF16();
+    
     start_kinsoku = end_kinsoku = NULL;
     num_start_kinsoku = num_end_kinsoku = 0;
-    setKinsoku(DEFAULT_START_KINSOKU, DEFAULT_END_KINSOKU, false);
+    setKinsoku(DEFAULT_START_KINSOKU, DEFAULT_END_KINSOKU, false, Encoding::CODE_CP932);
 }
 
 ScriptParser::~ScriptParser()
@@ -178,10 +183,10 @@ void ScriptParser::reset()
 
     /* ---------------------------------------- */
     /* Text related variables */
-    sentence_font.reset();
-    menu_font.reset();
-    ruby_font.reset();
-    dialog_font.reset();
+    sentence_font.reset(script_h.enc.getEncoding());
+    menu_font.reset(script_h.enc.getEncoding());
+    ruby_font.reset(script_h.enc.getEncoding());
+    dialog_font.reset(script_h.enc.getEncoding());
 
     current_font = &sentence_font;
     shade_distance[0] = 1;
@@ -192,6 +197,7 @@ void ScriptParser::reset()
     default_text_speed[2] = DEFAULT_TEXT_SPEED_HIGHT;
     max_page_list = MAX_PAGE_LIST+1;
     num_chars_in_sentence = 0;
+    current_read_language = -1;
     if (page_list){
         delete[] page_list;
         page_list = NULL;
@@ -756,110 +762,78 @@ void ScriptParser::createKeyTable( const char *key_exe )
         key_table[ring_buffer[(ring_start+i)%256]] = i;
 }
 
-void ScriptParser::setKinsoku(const char *start_chrs, const char *end_chrs, bool add)
+void ScriptParser::setKinsoku(const char *start_chrs, const char *end_chrs, bool add, int code)
 {
-    int i;
-    const char *kchr;
-    Kinsoku *tmp;
-
     // count chrs
     int num_start = 0;
-    kchr = start_chrs;
-    while (*kchr != '\0') {
-        if IS_TWO_BYTE(*kchr) kchr++;
-        kchr++;
+    const char *kchr = start_chrs;
+    while (*kchr != '\0'){
+        kchr += script_h.enc.getBytes(*kchr, code);
         num_start++;
     }
 
     int num_end = 0;
     kchr = end_chrs;
-    while (*kchr != '\0') {
-        if IS_TWO_BYTE(*kchr) kchr++;
-        kchr++;
+    while (*kchr != '\0'){
+        kchr += script_h.enc.getBytes(*kchr, code);
         num_end++;
     }
 
-    if (add) {
-        if (start_kinsoku != NULL)
+    Kinsoku *tmp = NULL;
+    if (add){
+        if (num_start_kinsoku > 0)
             tmp = start_kinsoku;
-        else {
-            tmp = new Kinsoku[1];
-            num_start_kinsoku = 0;
-        }
-    } else {
-        if (start_kinsoku != NULL)
+    }
+    else{
+        if (start_kinsoku)
             delete[] start_kinsoku;
-        tmp = new Kinsoku[1];
         num_start_kinsoku = 0;
     }
     start_kinsoku = new Kinsoku[num_start_kinsoku + num_start];
+    if (num_start_kinsoku > 0)
+        memcpy(start_kinsoku, tmp, sizeof(Kinsoku)*num_start_kinsoku);
     kchr = start_chrs;
-    for (i=0; i<num_start_kinsoku+num_start; i++) {
-        if (i < num_start_kinsoku)
-            start_kinsoku[i].chr[0] = tmp[i].chr[0];
-        else
-            start_kinsoku[i].chr[0] = *kchr++;
-        if IS_TWO_BYTE(start_kinsoku[i].chr[0]) {
-            if (i < num_start_kinsoku)
-                start_kinsoku[i].chr[1] = tmp[i].chr[1];
-            else
-                start_kinsoku[i].chr[1] = *kchr++;
-        } else {
-            start_kinsoku[i].chr[1] = '\0';
-        }
+    for (int i=0; i<num_start; i++){
+        start_kinsoku[num_start_kinsoku + i].unicode = script_h.enc.getUTF16(kchr, code);
+        kchr += script_h.enc.getBytes(*kchr, code);
     }
     num_start_kinsoku += num_start;
-    delete[] tmp;
+    if (tmp) delete[] tmp;
 
+    tmp = NULL;
     if (add) {
-        if (end_kinsoku != NULL)
+        if (num_end_kinsoku > 0)
             tmp = end_kinsoku;
-        else {
-            tmp = new Kinsoku[1];
-            num_end_kinsoku = 0;
-        }
-    } else {
-        if (end_kinsoku != NULL)
+    }
+    else{
+        if (end_kinsoku)
             delete[] end_kinsoku;
-        tmp = new Kinsoku[1];
         num_end_kinsoku = 0;
     }
     end_kinsoku = new Kinsoku[num_end_kinsoku + num_end];
+    if (num_end_kinsoku > 0)
+        memcpy(end_kinsoku, tmp, sizeof(Kinsoku)*num_end_kinsoku);
     kchr = end_chrs;
-    for (i=0; i<num_end_kinsoku+num_end; i++) {
-        if (i < num_end_kinsoku)
-            end_kinsoku[i].chr[0] = tmp[i].chr[0];
-        else
-            end_kinsoku[i].chr[0] = *kchr++;
-        if IS_TWO_BYTE(end_kinsoku[i].chr[0]) {
-            if (i < num_end_kinsoku)
-                end_kinsoku[i].chr[1] = tmp[i].chr[1];
-            else
-                end_kinsoku[i].chr[1] = *kchr++;
-        } else {
-            end_kinsoku[i].chr[1] = '\0';
-        }
+    for (int i=0; i<num_end; i++) {
+        end_kinsoku[num_end_kinsoku + i].unicode = script_h.enc.getUTF16(kchr, code);
+        kchr += script_h.enc.getBytes(*kchr, code);
     }
     num_end_kinsoku += num_end;
-    delete[] tmp;
+    if (tmp) delete[] tmp;
 }
 
 bool ScriptParser::isStartKinsoku(const char *str)
 {
-    for (int i=0; i<num_start_kinsoku; i++) {
-        if ((start_kinsoku[i].chr[0] == *str) &&
-            (start_kinsoku[i].chr[1] == *(str+1)))
-            return true;
-    }
+    unsigned short unicode = script_h.enc.getUTF16(str);
+    for (int i=0; i<num_start_kinsoku; i++)
+        if (unicode == start_kinsoku[i].unicode) return true;
     return false;
 }
 
 bool ScriptParser::isEndKinsoku(const char *str)
 {
-    for (int i=0; i<num_end_kinsoku; i++) {
-        if ((end_kinsoku[i].chr[0] == *str) &&
-            (end_kinsoku[i].chr[1] == *(str+1)))
-            return true;
-    }
+    unsigned short unicode = script_h.enc.getUTF16(str);
+    for (int i=0; i<num_end_kinsoku; i++)
+        if (unicode == end_kinsoku[i].unicode) return true;
     return false;
 }

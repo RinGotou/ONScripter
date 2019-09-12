@@ -2,7 +2,7 @@
  * 
  *  FontInfo.h - Font information storage class of ONScripter
  *
- *  Copyright (c) 2001-2016 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -26,6 +26,7 @@
 
 #include <SDL.h>
 #include "BaseReader.h"
+#include "Encoding.h"
 
 typedef unsigned char uchar3[3];
 
@@ -53,9 +54,10 @@ public:
     int line_offset_xy[2]; // ruby offset for each line
     bool rubyon_flag;
     int tateyoko_mode;
+    int code; // encoding
 
     FontInfo();
-    void reset();
+    void reset(int code = Encoding::CODE_CP932);
     void *openFont( char *font_file, int ratio1, int ratio2 );
     void setTateyokoMode( int tateyoko_mode );
     int getTateyokoMode();

@@ -2,7 +2,7 @@
  * 
  *  FontInfo.cpp - Font information storage class of ONScripter
  *
- *  Copyright (c) 2001-2013 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -67,8 +67,9 @@ FontInfo::FontInfo()
     reset();
 }
 
-void FontInfo::reset()
+void FontInfo::reset(int code)
 {
+    this->code = code;
     tateyoko_mode = YOKO_MODE;
     clear();
 
@@ -81,7 +82,7 @@ void FontInfo::reset()
 void *FontInfo::openFont( char *font_file, int ratio1, int ratio2 )
 {
     int font_size;
-    if ( font_size_xy[0] < font_size_xy[1] )
+    if (font_size_xy[0] < font_size_xy[1])
         font_size = font_size_xy[0];
     else
         font_size = font_size_xy[1];
@@ -157,9 +158,13 @@ int FontInfo::x(bool use_ruby_offset)
 
 int FontInfo::y(bool use_ruby_offset)
 {
-    int y = xy[1]*pitch_xy[1]/2 + top_xy[1] + line_offset_xy[1];
-    if (use_ruby_offset && rubyon_flag && tateyoko_mode == YOKO_MODE) 
-        y += pitch_xy[1] - font_size_xy[1];
+    int pitch_y = pitch_xy[1];
+    if (code == Encoding::CODE_UTF8 && ttf_font[0])
+        pitch_y += TTF_FontLineSkip((const TTF_Font*)ttf_font[0]) - font_size_xy[1];
+    int y = xy[1]*pitch_y/2 + top_xy[1] + line_offset_xy[1];
+    if (use_ruby_offset && rubyon_flag && tateyoko_mode == YOKO_MODE &&
+        code == Encoding::CODE_CP932)
+            y += pitch_xy[1] - font_size_xy[1];
     return y;
 }
 
@@ -226,6 +231,9 @@ SDL_Rect FontInfo::calcUpdatedArea(int start_xy[2], int ratio1, int ratio2)
     SDL_Rect rect;
     
     if (tateyoko_mode == YOKO_MODE){
+        int pitch_y = pitch_xy[1];
+        if (code == Encoding::CODE_UTF8 && ttf_font[0])
+            pitch_y += TTF_FontLineSkip((const TTF_Font*)ttf_font[0]) - font_size_xy[1];
         if (start_xy[1] == xy[1]){
             rect.x = top_xy[0] + pitch_xy[0]*start_xy[0]/2;
             rect.w = pitch_xy[0]*(xy[0]-start_xy[0])/2+1;
@@ -234,9 +242,10 @@ SDL_Rect FontInfo::calcUpdatedArea(int start_xy[2], int ratio1, int ratio2)
             rect.x = top_xy[0];
             rect.w = pitch_xy[0]*num_xy[0];
         }
-        rect.y = top_xy[1] + start_xy[1]*pitch_xy[1]/2;
-        rect.h = font_size_xy[1] + pitch_xy[1]*(xy[1]-start_xy[1])/2;
-        if (rubyon_flag) rect.h += pitch_xy[1] - font_size_xy[1];
+        rect.y = top_xy[1] + start_xy[1]*pitch_y/2;
+        rect.h = pitch_y + pitch_y*(xy[1]-start_xy[1])/2;
+        if (rubyon_flag && code == Encoding::CODE_CP932)
+            rect.h += pitch_xy[1] - font_size_xy[1];
     }
     else{
         rect.x = top_xy[0] + pitch_xy[0]*xy[0]/2;
