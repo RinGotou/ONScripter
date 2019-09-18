@@ -73,7 +73,7 @@ ScriptParser::ScriptParser()
     file_io_buf_len = 0;
     save_data_len = 0;
 
-    current_read_language = -1;
+    current_read_language = 1;
     render_font_outline = false;
     page_list = NULL;
 
@@ -183,10 +183,10 @@ void ScriptParser::reset()
 
     /* ---------------------------------------- */
     /* Text related variables */
-    sentence_font.reset(script_h.enc.getEncoding());
-    menu_font.reset(script_h.enc.getEncoding());
-    ruby_font.reset(script_h.enc.getEncoding());
-    dialog_font.reset(script_h.enc.getEncoding());
+    sentence_font.reset(&script_h.enc);
+    menu_font.reset(&script_h.enc);
+    ruby_font.reset(&script_h.enc);
+    dialog_font.reset(&script_h.enc);
 
     current_font = &sentence_font;
     shade_distance[0] = 1;
@@ -197,7 +197,7 @@ void ScriptParser::reset()
     default_text_speed[2] = DEFAULT_TEXT_SPEED_HIGHT;
     max_page_list = MAX_PAGE_LIST+1;
     num_chars_in_sentence = 0;
-    current_read_language = -1;
+    current_read_language = 1;
     if (page_list){
         delete[] page_list;
         page_list = NULL;

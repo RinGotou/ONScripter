@@ -2,7 +2,7 @@
  *
  *  ONScripter_rmenu.cpp - Right click menu handler of ONScripter
  *
- *  Copyright (c) 2001-2018 Ogapee. All rights reserved.
+ *  Copyright (c) 2001-2019 Ogapee. All rights reserved.
  *
  *  ogapee@aqua.dti2.ne.jp
  *
@@ -723,7 +723,8 @@ void ONScripter::buildDialog(bool yesno_flag, const char *mes1, const char *mes2
 
     dialog_font.top_xy[0] = 5;
     dialog_font.top_xy[1] = (DIALOG_HEADER-dialog_font.font_size_xy[1])/2;
-    dialog_font.setLineArea( strlen(mes2)/2+1 );
+    openFont(&dialog_font);
+    dialog_font.setLineArea(mes2);
     dialog_font.clear();
     drawString( mes2, col3, &dialog_font, false, s2, NULL, NULL );
 
@@ -786,7 +787,8 @@ void ONScripter::buildDialog(bool yesno_flag, const char *mes1, const char *mes2
 
             dialog_font.top_xy[0] = rect.x+(rect.w-dialog_font.pitch_xy[0]*strlen(mes[i])/2)/2;
             dialog_font.top_xy[1] = rect.y+(rect.h-dialog_font.font_size_xy[1])/2;
-            dialog_font.setLineArea( strlen(mes[i])/2+1 );
+            openFont(&dialog_font);
+            dialog_font.setLineArea(mes[i]);
             dialog_font.clear();
             drawString( mes[i], col3, &dialog_font, false, bs2, NULL, NULL );
         }

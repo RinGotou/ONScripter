@@ -826,7 +826,7 @@ int ScriptParser::itoaCommand()
 {
     bool itoa2_flag = false;
 
-    if ( script_h.isName( "itoa2" ) )
+    if (script_h.isName("itoa2") && script_h.enc.getEncoding() != Encoding::CODE_UTF8)
         itoa2_flag = true;
     
     script_h.readVariable();

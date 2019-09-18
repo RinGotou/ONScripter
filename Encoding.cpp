@@ -57,6 +57,14 @@ int Encoding::getBytes(unsigned char ch, int code)
     return 1;
 }
 
+char Encoding::getTextMarker()
+{
+    if (code == CODE_UTF8)
+        return '^';
+    
+    return '`';
+}
+
 unsigned short Encoding::getUTF16(const char *text, int code)
 {
     unsigned short unicode = 0;

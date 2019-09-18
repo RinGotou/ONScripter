@@ -33,6 +33,7 @@
 
 ScriptHandler::ScriptHandler()
 {
+    current_language = 1; // Japanese
     save_dir = NULL;
     num_of_labels = 0;
     script_buffer = NULL;
@@ -188,24 +189,29 @@ const char *ScriptHandler::readToken()
   readTokenTop:
     string_counter = 0;
     char ch = *buf;
-    if (ch == ';'){ // comment
+    if (ch == ';' ||
+        (strncmp(buf, "langjp", 6) == 0 && current_language == 0) ||
+        (strncmp(buf, "langen", 6) == 0 && current_language == 1)){ // comment
         addStringBuffer( ch );
         do{
             ch = *++buf;
             addStringBuffer( ch );
-        } while ( ch != 0x0a && ch != '\0' );
+        } while (ch != 0x0a && ch != '\0');
     }
     else if (ch & 0x80 ||
              (ch >= '0' && ch <= '9') ||
              ch == '@' || ch == '\\' || ch == '/' ||
              ch == '%' || ch == '?' || ch == '$' ||
              ch == '[' || ch == '(' || ch == '<' ||
+             (enc.getEncoding() == Encoding::CODE_UTF8 &&
+              ch == enc.getTextMarker()) ||
 #ifndef ENABLE_1BYTE_CHAR
              ch == '`' ||
 #endif             
              (!english_mode && ch == '>') ||
              ch == '!' || ch == '#' || ch == ',' || ch == '"'){ // text
         bool ignore_clickstr_flag = false;
+        bool eng_flag = false;
         while(1){
             int n = enc.getBytes(ch);
             char *old_buf = buf;
@@ -224,20 +230,23 @@ const char *ScriptHandler::readToken()
             }
             else{
                 ignore_clickstr_flag = false;
-                if (ch == '%' || ch == '?'){
+                if (!eng_flag && (ch == '%' || ch == '?')){
                     addIntVariable(&buf);
                     SKIP_SPACE(buf);
                 }
-                else if (ch == '$'){
+                else if (!eng_flag && (ch == '$')){
                     addStrVariable(&buf);
                     SKIP_SPACE(buf);
                 }
                 else{
+                    if (enc.getEncoding() == Encoding::CODE_UTF8 &&
+                        ch == enc.getTextMarker())
+                        eng_flag = !eng_flag;
                     if (ch == 0x0a || ch == '\0') break;
                     addStringBuffer( ch );
                     buf++;
                     if (ch == '_') ignore_clickstr_flag = true;
-                    if (!wait_script && (ch == '@' || ch == '\\')) wait_script = buf;
+                    if (!wait_script && !eng_flag && (ch == '@' || ch == '\\')) wait_script = buf;
                 }
             }
             ch = *buf;

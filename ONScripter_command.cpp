@@ -379,6 +379,7 @@ int ONScripter::strspCommand()
     ai->scalePosXY( screen_ratio1, screen_ratio2 );
 
     FontInfo fi;
+    fi.enc = &script_h.enc;
     fi.is_newline_accepted = true;
     fi.num_xy[0] = script_h.readInt();
     fi.num_xy[1] = script_h.readInt();
@@ -631,6 +632,26 @@ int ONScripter::skipoffCommand()
  
     return RET_CONTINUE; 
 } 
+
+int ONScripter::showlangjpCommand()
+{
+    script_h.current_language = 1;
+    
+    text_info.fill( 0, 0, 0, 0 );
+    flush(refreshMode(), &sentence_font_info.pos);
+
+    return RET_CONTINUE;
+}
+
+int ONScripter::showlangenCommand()
+{
+    script_h.current_language = 0;
+    
+    text_info.fill( 0, 0, 0, 0 );
+    flush(refreshMode(), &sentence_font_info.pos);
+
+    return RET_CONTINUE;
+}
 
 int ONScripter::sevolCommand()
 {
@@ -3305,7 +3326,8 @@ int ONScripter::cselbtnCommand()
     if ( link == NULL || link->text == NULL || *link->text == '\0' )
         return RET_CONTINUE;
 
-    csel_info.setLineArea( strlen(link->text)/2+1 );
+    openFont(&csel_info);
+    csel_info.setLineArea(link->text);
     csel_info.clear();
     ButtonLink *button = getSelectableSentence( link->text, &csel_info );
     root_button_link.insert( button );

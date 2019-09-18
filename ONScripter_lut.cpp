@@ -84,6 +84,8 @@ static ONScripter::FuncLUT func_lut[] = {
     {"skipoff",			&ONScripter::skipoffCommand},
     {"skip",			&ONScripter::skipCommand},
     {"sin",				&ONScripter::sinCommand},
+    {"showlangjp",		&ONScripter::showlangjpCommand},
+    {"showlangen",		&ONScripter::showlangenCommand},
     {"shadedistance",	&ONScripter::shadedistanceCommand},
     {"sevol",			&ONScripter::sevolCommand},
     {"setwindow3",		&ONScripter::setwindow3Command},

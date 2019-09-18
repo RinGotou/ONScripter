@@ -41,7 +41,7 @@ public:
     int font_size_xy[2];
     int top_xy[2]; // Top left origin
     int num_xy[2]; // Row and column of the text windows
-    int xy[2]; // Current position
+    float xy[2]; // Current position
     int old_xy[2];
     int pitch_xy[2]; // Width and height of a character
     int wait_time;
@@ -54,10 +54,10 @@ public:
     int line_offset_xy[2]; // ruby offset for each line
     bool rubyon_flag;
     int tateyoko_mode;
-    int code; // encoding
+    Encoding *enc; // encoding
 
     FontInfo();
-    void reset(int code = Encoding::CODE_CP932);
+    void reset(Encoding *enc);
     void *openFont( char *font_file, int ratio1, int ratio2 );
     void setTateyokoMode( int tateyoko_mode );
     int getTateyokoMode();
@@ -68,11 +68,11 @@ public:
     void setXY( int x=-1, int y=-1 );
     void clear();
     void newLine();
-    void setLineArea(int num);
+    void setLineArea(const char *buf);
 
-    bool isEndOfLine(int margin=0);
+    bool isEndOfLine(float margin=0.);
     bool isLineEmpty();
-    void advanceCharInHankaku(int offest);
+    void advanceCharInHankaku(float offest);
     void addLineOffset(int margin);
     void setRubyOnFlag(bool flag);
 

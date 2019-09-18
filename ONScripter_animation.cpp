@@ -145,14 +145,17 @@ void ONScripter::setupAnimationInfo( AnimationInfo *anim, FontInfo *info )
     if ( anim->trans_mode == AnimationInfo::TRANS_STRING ){
         FontInfo f_info = sentence_font;
         if (info) f_info = *info;
+        f_info.enc = &script_h.enc;
         f_info.rubyon_flag = anim->is_ruby_drawable;
 
         if ( anim->font_size_xy[0] >= 0 ){ // in case of Sprite, not rclick menu
             f_info.setTateyokoMode(0);
             f_info.top_xy[0] = anim->orig_pos.x;
             f_info.top_xy[1] = anim->orig_pos.y;
-            if (anim->is_single_line)
-                f_info.setLineArea( strlen(anim->file_name)/2+1 );
+            if (anim->is_single_line){
+                openFont(&f_info);
+                f_info.setLineArea(anim->file_name);
+            }
             f_info.clear();
             
             f_info.font_size_xy[0] = anim->font_size_xy[0];

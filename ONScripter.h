@@ -145,6 +145,8 @@ public:
     int spclclkCommand();
     int spbtnCommand();
     int skipoffCommand();
+    int showlangjpCommand();
+    int showlangenCommand();
     int sevolCommand();
     int setwindow3Command();
     int setwindow2Command();
@@ -746,7 +748,8 @@ private:
     
     void shiftHalfPixelX(SDL_Surface *surface);
     void shiftHalfPixelY(SDL_Surface *surface);
-    void drawGlyph( SDL_Surface *dst_surface, FontInfo *info, SDL_Color &color, char *text, int xy[2], AnimationInfo *cache_info, SDL_Rect *clip, SDL_Rect &dst_rect );
+    int  drawGlyph( SDL_Surface *dst_surface, FontInfo *info, SDL_Color &color, char *text, int xy[2], AnimationInfo *cache_info, SDL_Rect *clip, SDL_Rect &dst_rect );
+    void openFont(FontInfo *fi);
     void drawChar( char* text, FontInfo *info, bool flush_flag, bool lookback_flag, SDL_Surface *surface, AnimationInfo *cache_info, SDL_Rect *clip=NULL );
     void drawString( const char *str, uchar3 color, FontInfo *info, bool flush_flag, SDL_Surface *surface, SDL_Rect *rect = NULL, AnimationInfo *cache_info=NULL, bool pack_hankaku=true );
     void restoreTextBuffer(SDL_Surface *surface = NULL);
@@ -759,6 +762,7 @@ private:
     void endRuby(bool flush_flag, bool lookback_flag, SDL_Surface *surface, AnimationInfo *cache_info);
     int  textCommand();
     bool checkLineBreak(const char *buf, FontInfo *fi);
+    bool checkLigatureLineBreak(const char *buf, FontInfo *fi);
     void processEOT();
     bool processText();
 };

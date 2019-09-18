@@ -64,12 +64,12 @@ FontInfo::FontInfo()
     nofile_color[2] = 0x99;
     rubyon_flag = false;
 
-    reset();
+    reset(NULL);
 }
 
-void FontInfo::reset(int code)
+void FontInfo::reset(Encoding *enc)
 {
-    this->code = code;
+    this->enc = enc;
     tateyoko_mode = YOKO_MODE;
     clear();
 
@@ -81,12 +81,11 @@ void FontInfo::reset(int code)
 
 void *FontInfo::openFont( char *font_file, int ratio1, int ratio2 )
 {
-    int font_size;
-    if (font_size_xy[0] < font_size_xy[1])
+    int font_size = font_size_xy[1];
+    if (enc->getEncoding() != Encoding::CODE_UTF8 &&
+        font_size_xy[0] < font_size_xy[1])
         font_size = font_size_xy[0];
-    else
-        font_size = font_size_xy[1];
-
+    
     FontContainer *fc = &root_font_container;
     while( fc->next ){
         if ( fc->next->size == font_size ) break;
@@ -159,11 +158,11 @@ int FontInfo::x(bool use_ruby_offset)
 int FontInfo::y(bool use_ruby_offset)
 {
     int pitch_y = pitch_xy[1];
-    if (code == Encoding::CODE_UTF8 && ttf_font[0])
+    if (enc->getEncoding() == Encoding::CODE_UTF8 && ttf_font[0])
         pitch_y += TTF_FontLineSkip((const TTF_Font*)ttf_font[0]) - font_size_xy[1];
     int y = xy[1]*pitch_y/2 + top_xy[1] + line_offset_xy[1];
     if (use_ruby_offset && rubyon_flag && tateyoko_mode == YOKO_MODE &&
-        code == Encoding::CODE_CP932)
+        enc->getEncoding() == Encoding::CODE_CP932)
             y += pitch_xy[1] - font_size_xy[1];
     return y;
 }
@@ -196,13 +195,30 @@ void FontInfo::newLine()
     line_offset_xy[0] = line_offset_xy[1] = 0;
 }
 
-void FontInfo::setLineArea(int num)
+void FontInfo::setLineArea(const char *buf)
 {
-    num_xy[tateyoko_mode] = num;
+    if (enc->getEncoding() == Encoding::CODE_UTF8){
+        int w = 0;
+        while(buf[0]){
+            int n = enc->getBytes(buf[0]);
+            unsigned short unicode = enc->getUTF16(buf);
+            
+            int minx, maxx, miny, maxy, advanced;
+            TTF_GlyphMetrics((TTF_Font*)ttf_font[0], unicode,
+                             &minx, &maxx, &miny, &maxy, &advanced);
+
+            w += advanced + pitch_xy[tateyoko_mode] - font_size_xy[tateyoko_mode];
+            buf += n;
+        }
+        num_xy[tateyoko_mode] = w * 2 / pitch_xy[tateyoko_mode] + 1;
+    }
+    else{
+        num_xy[tateyoko_mode] = strlen(buf)/2 + 1;
+    }
     num_xy[1-tateyoko_mode] = 1;
 }
 
-bool FontInfo::isEndOfLine(int margin)
+bool FontInfo::isEndOfLine(float margin)
 {
     if (xy[tateyoko_mode] + margin >= num_xy[tateyoko_mode]*2) return true;
 
@@ -216,7 +232,7 @@ bool FontInfo::isLineEmpty()
     return false;
 }
 
-void FontInfo::advanceCharInHankaku(int offset)
+void FontInfo::advanceCharInHankaku(float offset)
 {
     xy[tateyoko_mode] += offset;
 }
@@ -232,7 +248,7 @@ SDL_Rect FontInfo::calcUpdatedArea(int start_xy[2], int ratio1, int ratio2)
     
     if (tateyoko_mode == YOKO_MODE){
         int pitch_y = pitch_xy[1];
-        if (code == Encoding::CODE_UTF8 && ttf_font[0])
+        if (enc->getEncoding() == Encoding::CODE_UTF8 && ttf_font[0])
             pitch_y += TTF_FontLineSkip((const TTF_Font*)ttf_font[0]) - font_size_xy[1];
         if (start_xy[1] == xy[1]){
             rect.x = top_xy[0] + pitch_xy[0]*start_xy[0]/2;
@@ -244,7 +260,7 @@ SDL_Rect FontInfo::calcUpdatedArea(int start_xy[2], int ratio1, int ratio2)
         }
         rect.y = top_xy[1] + start_xy[1]*pitch_y/2;
         rect.h = pitch_y + pitch_y*(xy[1]-start_xy[1])/2;
-        if (rubyon_flag && code == Encoding::CODE_CP932)
+        if (rubyon_flag && enc->getEncoding() == Encoding::CODE_CP932)
             rect.h += pitch_xy[1] - font_size_xy[1];
     }
     else{

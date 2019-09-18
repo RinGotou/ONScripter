@@ -388,7 +388,6 @@ protected:
             return ch;
         };
     } *page_list, *start_page, *current_page; // ring buffer
-    int  current_language;
     int  current_read_language;
     int  max_page_list;
     int  clickstr_line;

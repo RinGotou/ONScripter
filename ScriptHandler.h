@@ -143,7 +143,10 @@ public:
     bool isName( const char *name );
     bool isText();
     bool compareString( const char *buf );
-    void setEndStatus(int val){ end_status |= val; };
+    void setEndStatus(int val, bool replace=false){
+        if (replace) end_status = val;
+        else end_status |= val;
+    };
     inline int getEndStatus(){ return end_status; };
     void skipLine( int no=1 );
     void setLinepage( bool val );
@@ -237,6 +240,7 @@ public:
     int screen_height;
     int variable_range;
     int global_variable_border;
+    int current_language;
 
     BaseReader *cBR;
     Encoding enc;

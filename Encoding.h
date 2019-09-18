@@ -37,6 +37,8 @@ public:
     void setEncoding(int code);
     int getEncoding(){ return code; };
     
+    char getTextMarker();
+
     int getBytes(unsigned char ch, int code = -1);
     unsigned short getUTF16(const char *text, int code = -1);
 

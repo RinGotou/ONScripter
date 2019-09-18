@@ -69,7 +69,7 @@ void ONScripter::shiftHalfPixelY(SDL_Surface *surface)
     SDL_UnlockSurface( surface );
 }
 
-void ONScripter::drawGlyph( SDL_Surface *dst_surface, FontInfo *info, SDL_Color &color, char* text, int xy[2], AnimationInfo *cache_info, SDL_Rect *clip, SDL_Rect &dst_rect )
+int ONScripter::drawGlyph( SDL_Surface *dst_surface, FontInfo *info, SDL_Color &color, char* text, int xy[2], AnimationInfo *cache_info, SDL_Rect *clip, SDL_Rect &dst_rect )
 {
     unsigned short unicode = script_h.enc.getUTF16(text);
 
@@ -166,14 +166,14 @@ void ONScripter::drawGlyph( SDL_Surface *dst_surface, FontInfo *info, SDL_Color 
         SDL_FreeSurface(tmp_surface_s);
     if (tmp_surface)
         SDL_FreeSurface(tmp_surface);
+    
+    return advanced;
 }
 
-void ONScripter::drawChar( char* text, FontInfo *info, bool flush_flag, bool lookback_flag, SDL_Surface *surface, AnimationInfo *cache_info, SDL_Rect *clip )
+void ONScripter::openFont(FontInfo *fi)
 {
-    //printf("draw %x-%x[%s] %d, %d\n", text[0], text[1], text, info->xy[0], info->xy[1] );
-    
-    if ( info->ttf_font[0] == NULL ){
-        if ( info->openFont( font_file, screen_ratio1, screen_ratio2 ) == NULL ){
+    if (fi->ttf_font[0] == NULL){
+        if (fi->openFont(font_file, screen_ratio1, screen_ratio2) == NULL){
             fprintf( stderr, "can't open font file: %s\n", font_file );
             quit();
             exit(-1);
@@ -181,10 +181,16 @@ void ONScripter::drawChar( char* text, FontInfo *info, bool flush_flag, bool loo
     }
 #if defined(PSP)
     else
-        info->openFont( font_file, screen_ratio1, screen_ratio2 );
+        fi->openFont(font_file, screen_ratio1, screen_ratio2);
 #endif
+}
 
-    if ( info->isEndOfLine() ){
+void ONScripter::drawChar( char* text, FontInfo *info, bool flush_flag, bool lookback_flag, SDL_Surface *surface, AnimationInfo *cache_info, SDL_Rect *clip )
+{
+    //printf("draw %x-%x[%s] %d, %d\n", text[0], text[1], text, info->xy[0], info->xy[1] );
+    openFont(info);
+
+    if (info->isEndOfLine()){
         info->newLine();
         for (int i=0 ; i<indent_offset ; i++){
             if (lookback_flag){
@@ -217,7 +223,8 @@ void ONScripter::drawChar( char* text, FontInfo *info, bool flush_flag, bool loo
     
         SDL_Color color = {info->color[0], info->color[1], info->color[2]};
         SDL_Rect dst_rect;
-        drawGlyph( surface, info, color, text2, xy, cache_info, clip, dst_rect );
+        float adv = drawGlyph(surface, info, color, text2, xy, cache_info, clip, dst_rect); 
+        if (n == 1) adv -= 0.5; // 0.5 is for adjusting the increse by FT_CEIL
 
         if ( surface == accumulation_surface &&
              !flush_flag &&
@@ -235,10 +242,22 @@ void ONScripter::drawChar( char* text, FontInfo *info, bool flush_flag, bool loo
         }
 
         if (n >= 2){
-            info->advanceCharInHankaku(2);
+            if (script_h.enc.getEncoding() == Encoding::CODE_UTF8){
+                // handle a proportional font
+                adv += info->pitch_xy[0] - info->font_size_xy[0];
+                info->advanceCharInHankaku(adv*2.0/info->pitch_xy[0]);
+            }
+            else
+                info->advanceCharInHankaku(2);
             break;
         }
-        info->advanceCharInHankaku(1);
+        if (script_h.enc.getEncoding() == Encoding::CODE_UTF8){
+            // handle a proportional font
+            adv += info->pitch_xy[0] - info->font_size_xy[0];
+            info->advanceCharInHankaku(adv*2.0/info->pitch_xy[0]);
+        }
+        else
+            info->advanceCharInHankaku(1);
         text2[0] = text[1];
         if (text2[0] == 0) break;
     }
@@ -249,7 +268,7 @@ void ONScripter::drawChar( char* text, FontInfo *info, bool flush_flag, bool loo
     }
 }
 
-void ONScripter::drawString( const char *str, uchar3 color, FontInfo *info, bool flush_flag, SDL_Surface *surface, SDL_Rect *rect, AnimationInfo *cache_info, bool pack_hankaku)
+void ONScripter::drawString(const char *str, uchar3 color, FontInfo *info, bool flush_flag, SDL_Surface *surface, SDL_Rect *rect, AnimationInfo *cache_info, bool pack_hankaku)
 {
     int i;
 
@@ -264,6 +283,8 @@ void ONScripter::drawString( const char *str, uchar3 color, FontInfo *info, bool
     for ( i=0 ; i<3 ; i++ ) info->color[i] = color[i];
 
     bool skip_whitespace_flag = true;
+    if (script_h.enc.getEncoding() == Encoding::CODE_UTF8)
+        skip_whitespace_flag = false;
     char text[4] = {};
     while(*str){
         while (*str == ' ' && skip_whitespace_flag) str++;
@@ -275,9 +296,9 @@ void ONScripter::drawString( const char *str, uchar3 color, FontInfo *info, bool
             continue;
         }
 #endif            
-        if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 &&  *str == '^'){
+        if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 &&
+            *str == script_h.enc.getTextMarker()){
             str++;
-            skip_whitespace_flag = false;
             continue;
         }
 
@@ -334,6 +355,8 @@ void ONScripter::drawString( const char *str, uchar3 color, FontInfo *info, bool
             str++;
         }
         else if (*str){
+            if (checkLigatureLineBreak(str, info))
+                info->newLine();
             text[0] = *str++;
             if (*str && *str != 0x0a && pack_hankaku &&
                 script_h.enc.getEncoding() == Encoding::CODE_CP932)
@@ -422,6 +445,9 @@ void ONScripter::restoreTextBuffer(SDL_Surface *surface)
                 i += n-1;
             }
             else{
+                if (checkLigatureLineBreak(current_page->text+i, &f_info))
+                    f_info.newLine();
+                
                 out_text[1] = 0;
                 
                 if (i+1 != current_page->text_count &&
@@ -740,7 +766,7 @@ int ONScripter::textCommand()
         processEOT();
     }
     else
-#endif    
+#endif
     while(processText());
 
     return RET_CONTINUE;
@@ -790,6 +816,30 @@ bool ONScripter::checkLineBreak(const char *buf, FontInfo *fi)
     }
 
     return false;
+}
+
+bool ONScripter::checkLigatureLineBreak(const char *buf, FontInfo *fi)
+{
+    if (script_h.current_language != 0) return false;
+
+    openFont(fi);
+    
+    int w = 0;
+    while (buf[0] != ' ' && buf[0] != 0x0a && buf[0] != 0 &&
+           buf[0] != script_h.enc.getTextMarker()){
+        int n = script_h.enc.getBytes(buf[0]);
+        unsigned short unicode = script_h.enc.getUTF16(buf);
+        
+        int minx, maxx, miny, maxy, advanced;
+        TTF_GlyphMetrics((TTF_Font*)fi->ttf_font[0], unicode,
+                         &minx, &maxx, &miny, &maxy, &advanced);
+        
+        w += advanced + fi->pitch_xy[0] - fi->font_size_xy[0];
+        buf += n;
+    }
+    w -= fi->pitch_xy[0] - fi->font_size_xy[0];
+
+    return fi->isEndOfLine(w * 2.0 / fi->pitch_xy[0]);
 }
 
 void ONScripter::processEOT()
@@ -946,7 +996,7 @@ bool ONScripter::processText()
         }
         return true;
     }
-    else if ( ch == '#' && !(script_h.getEndStatus() & ScriptHandler::END_1BYTE_CHAR) ){
+    else if (ch == '#'){
         readColor( &sentence_font.color, script_h.getStringBuffer() + string_buffer_offset );
         readColor( &ruby_font.color, script_h.getStringBuffer() + string_buffer_offset );
         string_buffer_offset += 7;
@@ -1014,6 +1064,17 @@ bool ONScripter::processText()
         in_textbtn_flag = false;
         return true;
     }
+    else if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 &&
+             ch == script_h.enc.getTextMarker()){
+        int status = script_h.getEndStatus();
+        if (status & ScriptHandler::END_1BYTE_CHAR)
+            script_h.setEndStatus(status & ~ScriptHandler::END_1BYTE_CHAR, true);
+        else
+            script_h.setEndStatus(ScriptHandler::END_1BYTE_CHAR);
+        string_buffer_offset++;
+        
+        return true;
+    }
     else{
         out_text[0] = ch;
         
@@ -1063,6 +1124,8 @@ bool ONScripter::processText()
         }
         else if (script_h.getEndStatus() & ScriptHandler::END_1BYTE_CHAR ||
                  script_h.enc.getEncoding() == Encoding::CODE_UTF8){
+            if (checkLigatureLineBreak(script_h.getStringBuffer() + string_buffer_offset, &sentence_font)) 
+                sentence_font.newLine();
             drawChar(out_text, &sentence_font, flush_flag, true, accumulation_surface, &text_info);
             num_chars_in_sentence++;
         }

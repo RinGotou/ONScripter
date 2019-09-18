@@ -631,7 +631,7 @@ void ONScripter::resetSub()
 
 void ONScripter::resetSentenceFont()
 {
-    sentence_font.reset(script_h.enc.getEncoding());
+    sentence_font.reset(&script_h.enc);
     sentence_font.font_size_xy[0] = DEFAULT_FONT_SIZE;
     sentence_font.font_size_xy[1] = DEFAULT_FONT_SIZE;
     sentence_font.top_xy[0] = 21;
@@ -886,6 +886,10 @@ int ONScripter::parseLine( )
 
     const char *cmd = script_h.getStringBuffer();
     if      (cmd[0] == ';') return RET_CONTINUE;
+    else if (strncmp(cmd, "langjp", 6) == 0 &&
+             script_h.current_language == 0) return RET_CONTINUE;
+    else if (strncmp(cmd, "langen", 6) == 0 &&
+             script_h.current_language == 1) return RET_CONTINUE;
     else if (cmd[0] == '*') return RET_CONTINUE;
     else if (cmd[0] == ':') return RET_CONTINUE;
 
