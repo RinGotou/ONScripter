@@ -394,6 +394,8 @@ bool ONScripter::doEffect( EffectLink *effect, bool clear_dirty_region )
         if (effect->anim.image_name != NULL){
             if (!strncmp(effect->anim.image_name, "breakup.dll", 11)){
                 effectBreakup(effect->anim.image_name, effect_duration);
+            } else if (!strncmp(effect->anim.image_name, "cascade.dll", 11)){
+                effectCascade(effect->anim.image_name, effect_duration);
             } else {
                 // do crossfade
                 height = 256 * effect_counter / effect_duration;

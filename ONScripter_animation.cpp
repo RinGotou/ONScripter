@@ -152,19 +152,24 @@ void ONScripter::setupAnimationInfo( AnimationInfo *anim, FontInfo *info )
             f_info.setTateyokoMode(0);
             f_info.top_xy[0] = anim->orig_pos.x;
             f_info.top_xy[1] = anim->orig_pos.y;
+            
+            if (anim->font_pitch[0] >= 0){
+                f_info.font_size_xy[0] = anim->font_size_xy[0];
+                f_info.pitch_xy[0] = anim->font_pitch[0];
+            }
+            if (anim->font_pitch[1] >= 0){
+                f_info.font_size_xy[1] = anim->font_size_xy[1];
+                f_info.pitch_xy[1] = anim->font_pitch[1];
+            }
+
+            f_info.ttf_font[0] = NULL;
+            f_info.ttf_font[1] = NULL;
+            
             if (anim->is_single_line){
                 openFont(&f_info);
                 f_info.setLineArea(anim->file_name);
             }
             f_info.clear();
-            
-            f_info.font_size_xy[0] = anim->font_size_xy[0];
-            f_info.font_size_xy[1] = anim->font_size_xy[1];
-            f_info.pitch_xy[0] = anim->font_pitch[0];
-            f_info.pitch_xy[1] = anim->font_pitch[1];
-
-            f_info.ttf_font[0] = NULL;
-            f_info.ttf_font[1] = NULL;
         }
 
         if (f_info.ttf_font[0] == NULL)

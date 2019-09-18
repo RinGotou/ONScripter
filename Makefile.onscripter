@@ -8,6 +8,7 @@ GUI_OBJS = ONScripter$(OBJSUFFIX) \
 	ONScripter_command$(OBJSUFFIX) \
 	ONScripter_effect$(OBJSUFFIX) \
 	ONScripter_effect_breakup$(OBJSUFFIX) \
+	ONScripter_effect_cascade$(OBJSUFFIX) \
 	ONScripter_event$(OBJSUFFIX) \
 	ONScripter_file$(OBJSUFFIX) \
 	ONScripter_file2$(OBJSUFFIX) \

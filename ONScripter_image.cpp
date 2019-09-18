@@ -240,7 +240,7 @@ int ONScripter::resizeSurface( SDL_Surface *src, SDL_Surface *dst )
 // src1: effect_src_surface
 // src2: effect_dst_surface
 void ONScripter::alphaBlend( SDL_Surface *mask_surface,
-                                  int trans_mode, Uint32 mask_value, SDL_Rect *clip )
+                             int trans_mode, Uint32 mask_value, SDL_Rect *clip )
 {
     SDL_Rect rect = screen_rect;
     int i, j;
@@ -255,7 +255,8 @@ void ONScripter::alphaBlend( SDL_Surface *mask_surface,
 
     SDL_LockSurface( effect_src_surface );
     SDL_LockSurface( effect_dst_surface );
-    SDL_LockSurface( accumulation_surface );
+    if (accumulation_surface != effect_dst_surface)
+        SDL_LockSurface( accumulation_surface );
     if ( mask_surface ) SDL_LockSurface( mask_surface );
     
     ONSBuf *src1_buffer = (ONSBuf *)effect_src_surface->pixels   + effect_src_surface->w * rect.y + rect.x;
@@ -321,7 +322,8 @@ void ONScripter::alphaBlend( SDL_Surface *mask_surface,
     }
     
     if ( mask_surface ) SDL_UnlockSurface( mask_surface );
-    SDL_UnlockSurface( accumulation_surface );
+    if (accumulation_surface != effect_dst_surface)
+        SDL_UnlockSurface( accumulation_surface );
     SDL_UnlockSurface( effect_dst_surface );
     SDL_UnlockSurface( effect_src_surface );
 }

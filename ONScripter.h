@@ -489,6 +489,7 @@ private:
     void buildBreakupMask();
     void initBreakup( char *params );
     void effectBreakup( char *params, int duration );
+    void effectCascade( char *params, int duration );
 
     // ----------------------------------------
     // variables and methods relevant to event
