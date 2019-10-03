@@ -31,6 +31,7 @@
     <ClCompile Include="ONScripter_command.cpp" />
     <ClCompile Include="ONScripter_effect.cpp" />
     <ClCompile Include="ONScripter_effect_breakup.cpp" />
+    <ClCompile Include="ONScripter_effect_cascade.cpp" />
     <ClCompile Include="ONScripter_event.cpp" />
     <ClCompile Include="ONScripter_file.cpp" />
     <ClCompile Include="ONScripter_file2.cpp" />

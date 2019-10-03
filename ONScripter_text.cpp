@@ -354,6 +354,26 @@ void ONScripter::drawString(const char *str, uchar3 color, FontInfo *info, bool 
             info->newLine();
             str++;
         }
+        else if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 &&
+                 *str == '~'){
+            while(1){
+                str++;
+                if (*str == 0x0a || *str == 0) break;
+                if (*str == '~'){
+                    str++;
+                    break;
+                }
+                if (*str == 'i'){
+                    openFont(info);
+                    info->toggleStyle(TTF_STYLE_ITALIC);
+                }
+                else if (*str == 'b'){
+                    openFont(info);
+                    info->toggleStyle(TTF_STYLE_BOLD);
+                }
+            }
+            continue;
+        }
         else if (*str){
             if (checkLigatureLineBreak(str, info))
                 info->newLine();
@@ -443,6 +463,26 @@ void ONScripter::restoreTextBuffer(SDL_Surface *surface)
                 if (checkLineBreak(current_page->text+i, &f_info))
                     f_info.newLine();
                 i += n-1;
+            }
+            else if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 &&
+                     out_text[0] == '~'){
+                while(1){
+                    char ch = current_page->text[++i];
+                    if (ch == 0x0a || ch == 0) break;
+                    if (ch == '~'){
+                        i++;
+                        break;
+                    }
+                    if (ch == 'i'){
+                        openFont(&f_info);
+                        f_info.toggleStyle(TTF_STYLE_ITALIC);
+                    }
+                    else if (ch == 'b'){
+                        openFont(&f_info);
+                        f_info.toggleStyle(TTF_STYLE_BOLD);
+                    }
+                }
+                continue;
             }
             else{
                 if (checkLigatureLineBreak(current_page->text+i, &f_info))
@@ -1072,6 +1112,29 @@ bool ONScripter::processText()
         else
             script_h.setEndStatus(ScriptHandler::END_1BYTE_CHAR);
         string_buffer_offset++;
+        
+        return true;
+    }
+    else if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 &&
+             ch == '~'){
+        current_page->add('~');
+        while(1){
+            ch = script_h.getStringBuffer()[++string_buffer_offset];
+            if (ch == 0x0a || ch == 0) break;
+                current_page->add(ch);
+            if (ch == '~'){
+                string_buffer_offset++;
+                break;
+            }
+            if (ch == 'i'){
+                openFont(&sentence_font);
+                sentence_font.toggleStyle(TTF_STYLE_ITALIC);
+            }
+            else if (ch == 'b'){
+                openFont(&sentence_font);
+                sentence_font.toggleStyle(TTF_STYLE_BOLD);
+            }
+        }
         
         return true;
     }

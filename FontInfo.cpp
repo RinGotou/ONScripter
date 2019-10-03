@@ -147,6 +147,16 @@ int FontInfo::getRemainingLine()
         return num_xy[1] - num_xy[0] + xy[0]/2 + 1;
 }
 
+void FontInfo::toggleStyle(int style)
+{
+    for (int i=0; i<2; i++){
+        if (ttf_font[i] == NULL) continue;
+        int old_style = TTF_GetFontStyle((TTF_Font*)ttf_font[i]);
+        int new_style = old_style ^ style;
+        TTF_SetFontStyle((TTF_Font*)ttf_font[i], new_style);
+    }
+}
+
 int FontInfo::x(bool use_ruby_offset)
 {
     int x = xy[0]*pitch_xy[0]/2 + top_xy[0] + line_offset_xy[0];

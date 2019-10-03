@@ -62,6 +62,7 @@ public:
     void setTateyokoMode( int tateyoko_mode );
     int getTateyokoMode();
     int getRemainingLine();
+    void toggleStyle(int style);
     
     int x(bool use_ruby_offset=true);
     int y(bool use_ruby_offset=true);
