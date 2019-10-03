@@ -696,17 +696,19 @@ void ONScripter::startRuby(const char *buf, FontInfo &info)
         if ( *buf == '/' ){
             ruby_struct.stage = RubyStruct::RUBY;
             ruby_struct.ruby_start = buf+1;
+            buf++;
         }
         else if ( *buf == ')' || *buf == '\0' ){
             break;
         }
         else{
-            if ( ruby_struct.stage == RubyStruct::BODY )
-                ruby_struct.body_count++;
-            else if ( ruby_struct.stage == RubyStruct::RUBY )
-                ruby_struct.ruby_count++;
+            int n = script_h.enc.getBytes(*buf);
+            if (ruby_struct.stage == RubyStruct::BODY)
+                ruby_struct.body_count += (n == 1)?1:2;
+            else if (ruby_struct.stage == RubyStruct::RUBY)
+                ruby_struct.ruby_count += (n == 1)?1:2;
+            buf += n;
         }
-        buf++;
     }
     ruby_struct.ruby_end = buf;
     ruby_struct.stage = RubyStruct::BODY;
@@ -715,15 +717,18 @@ void ONScripter::startRuby(const char *buf, FontInfo &info)
 
 void ONScripter::endRuby(bool flush_flag, bool lookback_flag, SDL_Surface *surface, AnimationInfo *cache_info)
 {
-    char out_text[3]= {'\0', '\0', '\0'};
-    if ( sentence_font.rubyon_flag ){
+    char out_text[4]= {};
+    if (sentence_font.rubyon_flag){
         ruby_font.clear();
         const char *buf = ruby_struct.ruby_start;
-        while( buf < ruby_struct.ruby_end ){
-            out_text[0] = *buf;
-            out_text[1] = *(buf+1);
-            drawChar( out_text, &ruby_font, flush_flag, lookback_flag, surface, cache_info );
-            buf+=2;
+        while(buf < ruby_struct.ruby_end){
+            int n = 2;
+            if (script_h.enc.getEncoding() == Encoding::CODE_UTF8)
+                n = script_h.enc.getBytes(buf[0]);
+            for (int i=0; i<n; i++)
+                out_text[i] = buf[i];
+            drawChar(out_text, &ruby_font, flush_flag, lookback_flag, surface, cache_info);
+            buf += n;
         }
     }
     ruby_struct.stage = RubyStruct::NONE;
@@ -1187,7 +1192,7 @@ bool ONScripter::processText()
         }
         else if (script_h.getEndStatus() & ScriptHandler::END_1BYTE_CHAR ||
                  script_h.enc.getEncoding() == Encoding::CODE_UTF8){
-            if (checkLigatureLineBreak(script_h.getStringBuffer() + string_buffer_offset, &sentence_font)) 
+            if (checkLigatureLineBreak(script_h.getStringBuffer() + string_buffer_offset, &sentence_font))
                 sentence_font.newLine();
             drawChar(out_text, &sentence_font, flush_flag, true, accumulation_surface, &text_info);
             num_chars_in_sentence++;
