@@ -226,14 +226,14 @@ void ONScripter::setupAnimationInfo( AnimationInfo *anim, FontInfo *info )
 
         if (surface &&
             ((screen_ratio2 != screen_ratio1) ||
-             (screen_width == 640 && anim->is_2x)) &&
+             (script_h.screen_width == 640 && anim->is_2x)) &&
             (!disable_rescale_flag || location == BaseReader::ARCHIVE_TYPE_NONE))
         {
             SDL_Surface *src_s = surface;
 
             int w = src_s->w * screen_ratio1 / screen_ratio2;
             int h = src_s->h * screen_ratio1 / screen_ratio2;
-            if (screen_width == 640 && anim->is_2x){
+            if (script_h.screen_width == 640 && anim->is_2x){
                 // workaround to deal with hard-coded 2x mode
                 w /= 2;
                 h /= 2;
