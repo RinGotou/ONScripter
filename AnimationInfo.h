@@ -72,6 +72,8 @@ public:
     bool is_single_line;
     bool is_tight_region; // valid under TRANS_STRING, if false, ruby is parsed
     bool is_ruby_drawable;
+    bool is_2x;
+    bool is_flipped;
         
     char *file_name;
     char *mask_file_name;

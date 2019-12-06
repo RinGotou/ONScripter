@@ -1126,7 +1126,7 @@ bool ONScripter::processText()
         while(1){
             ch = script_h.getStringBuffer()[++string_buffer_offset];
             if (ch == 0x0a || ch == 0) break;
-                current_page->add(ch);
+            current_page->add(ch);
             if (ch == '~'){
                 string_buffer_offset++;
                 break;

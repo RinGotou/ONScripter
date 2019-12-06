@@ -405,7 +405,9 @@ int main( int argc, char **argv )
     // ----------------------------------------
     // Run ONScripter
 
+#if !defined(ANDROID) 
     if (ons.openScript()) exit(-1);
+#endif
     if (ons.init()) exit(-1);
     ons.executeLabel();
     

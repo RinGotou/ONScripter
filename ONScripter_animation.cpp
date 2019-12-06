@@ -128,7 +128,7 @@ void ONScripter::setupAnimationInfo( AnimationInfo *anim, FontInfo *info )
         anim->file_name && anim->surface_name &&
         strcmp(anim->file_name, anim->surface_name) == 0 &&
         ((!anim->mask_file_name && !anim->mask_surface_name) ||
-         (anim->mask_file_name && !anim->mask_surface_name &&
+         (anim->mask_file_name && anim->mask_surface_name &&
           strcmp(anim->mask_file_name, anim->mask_surface_name) == 0))) return;
 
     anim->deleteSurface();
@@ -213,26 +213,37 @@ void ONScripter::setupAnimationInfo( AnimationInfo *anim, FontInfo *info )
     else{
         bool has_alpha;
         int location;
-        SDL_Surface *surface = loadImage( anim->file_name, &has_alpha, &location, &anim->default_alpha );
+        SDL_Surface *surface = loadImage(anim->file_name, anim->is_flipped, &has_alpha, &location, &anim->default_alpha);
 
         if (script_h.enc.getEncoding() == Encoding::CODE_UTF8 && has_alpha)
             anim->trans_mode = AnimationInfo::TRANS_ALPHA;
 
         SDL_Surface *surface_m = NULL;
         if (anim->trans_mode == AnimationInfo::TRANS_MASK)
-            surface_m = loadImage( anim->mask_file_name );
+            surface_m = loadImage(anim->mask_file_name, anim->is_flipped);
         
         surface = anim->setupImageAlpha(surface, surface_m, has_alpha);
 
         if (surface &&
-            screen_ratio2 != screen_ratio1 &&
+            ((screen_ratio2 != screen_ratio1) ||
+             (screen_width == 640 && anim->is_2x)) &&
             (!disable_rescale_flag || location == BaseReader::ARCHIVE_TYPE_NONE))
         {
             SDL_Surface *src_s = surface;
 
-            int w, h;
-            if ( (w = src_s->w * screen_ratio1 / screen_ratio2) == 0 ) w = 1;
-            if ( (h = src_s->h * screen_ratio1 / screen_ratio2) == 0 ) h = 1;
+            int w = src_s->w * screen_ratio1 / screen_ratio2;
+            int h = src_s->h * screen_ratio1 / screen_ratio2;
+            if (screen_width == 640 && anim->is_2x){
+                // workaround to deal with hard-coded 2x mode
+                w /= 2;
+                h /= 2;
+                anim->orig_pos.w /= 2;
+                anim->orig_pos.h /= 2;
+                if (anim->orig_pos.w == 0) anim->orig_pos.w = 1;
+                if (anim->orig_pos.h == 0) anim->orig_pos.h = 1;
+            }
+            if (w == 0) w = 1;
+            if (h == 0) h = 1;
             SDL_PixelFormat *fmt = image_surface->format;
             surface = SDL_CreateRGBSurface( SDL_SWSURFACE, w, h,
                                             fmt->BitsPerPixel, fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask );
@@ -257,8 +268,20 @@ void ONScripter::parseTaggedString( AnimationInfo *anim )
     anim->num_of_cells = 1;
     anim->trans_mode = trans_mode;
 
+    anim->is_2x = false;
+    anim->is_flipped = false;
     if ( buffer[0] == ':' ){
         while (*++buffer == ' ');
+        
+        if (buffer[0] == 'b'){
+            anim->is_2x = true;
+            buffer++;
+        }
+        
+        if (buffer[0] == 'f'){
+            anim->is_flipped = true;
+            buffer++;
+        }
         
         if ( buffer[0] == 'a' ){
             anim->trans_mode = AnimationInfo::TRANS_ALPHA;

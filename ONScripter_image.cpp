@@ -25,7 +25,7 @@
 #include <new>
 #include "resize_image.h"
 
-SDL_Surface *ONScripter::loadImage(char *filename, bool *has_alpha, int *location, unsigned char *alpha)
+SDL_Surface *ONScripter::loadImage(char *filename, bool is_flipped, bool *has_alpha, int *location, unsigned char *alpha)
 {
     if (!filename) return NULL;
 
@@ -37,6 +37,20 @@ SDL_Surface *ONScripter::loadImage(char *filename, bool *has_alpha, int *locatio
     else
         tmp = createSurfaceFromFile(filename, has_alpha, location);
     if (tmp == NULL) return NULL;
+
+    if (is_flipped){
+        SDL_PixelFormat *fmt = tmp->format;
+        SDL_Surface *tmp2 = SDL_CreateRGBSurface(SDL_SWSURFACE, tmp->w, tmp->h,
+                                                 fmt->BitsPerPixel, fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask);
+        for (int y=0; y<tmp->h; ++y) {
+            Uint32 *src = (Uint32 *)tmp->pixels + tmp->w * y;
+            Uint32 *dst = (Uint32 *)tmp2->pixels + tmp2->w * (y + 1) - 1;
+            for (int x=0; x<tmp->w; x++)
+                *dst-- = *src++;
+        }
+        SDL_FreeSurface(tmp);
+        tmp = tmp2;
+    }
 
     SDL_Surface *ret;
     if((tmp->w * tmp->format->BytesPerPixel == tmp->pitch) &&

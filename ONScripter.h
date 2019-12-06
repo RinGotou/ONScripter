@@ -584,7 +584,7 @@ private:
     unsigned char *resize_buffer;
     size_t resize_buffer_size;
 
-    SDL_Surface *loadImage(char *filename, bool *has_alpha=NULL, int *location=NULL, unsigned char *alpha=NULL);
+    SDL_Surface *loadImage(char *filename, bool is_flipped, bool *has_alpha=NULL, int *location=NULL, unsigned char *alpha=NULL);
     SDL_Surface *createRectangleSurface(char *filename, bool *has_alpha, unsigned char *alpha=NULL);
     SDL_Surface *createSurfaceFromFile(char *filename,bool *has_alpha, int *location);
 
